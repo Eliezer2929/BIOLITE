@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Ponche</title>
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Chart.js para las gráficas del Home -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Iconos (Boxicons) -->
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+</head>
+<body>
+  <div class="app">
+    <!-- ================= Sidebar ================= -->
+    <aside class="sidebar collapsed" id="sidebar">
+      <!-- Botón flotante para colapsar/expandir -->
+      <div id="floatingToggle" class="floating-toggle" title="Mostrar/Ocultar menú">
+        <i class='bx bx-chevron-left'></i>
+      </div>
+
+      <div class="sidebar-header">
+        <h2>BIOLITE</h2>
+      </div>
+
+      <!-- Menú principal -->
+      <nav class="menu">
+        <!-- Grupo: Personal -->
+        <div class="menu-group">
+          <button class="menu-toggle"><i class='bx bx-user'></i> <span>Personal</span></button>
+          <div class="submenu">
+            <!-- NOTA: Estos submenús llaman a la lógica en script.js -->
+            <!-- Usuarios y Empleado usan API pública; Renuncia usa posts (API pública);
+                 Departamento, Cargo y Área muestran "no vinculado" por ahora -->
+            <a href="#">Departamento</a>
+            <a href="#">Cargo</a>
+            <a href="#">Área</a>
+            <a href="#">Empleado</a>
+            <a href="#">Renuncia</a>
+          </div>
+        </div>
+
+        <!-- Grupo: Dispositivos -->
+        <div class="menu-group">
+          <button class="menu-toggle"><i class='bx bx-chip'></i> <span>Dispositivos</span></button>
+          <div class="submenu">
+            <!-- Estos por ahora muestran "no vinculado" -->
+            <a href="#">Dispositivo</a>
+            <a href="#">Comando de Dispositivo</a>
+          </div>
+        </div>
+
+        <!-- Grupo: Asistencia -->
+        <div class="menu-group">
+          <button class="menu-toggle"><i class='bx bx-calendar-check'></i> <span>Asistencia</span></button>
+          <div class="submenu">
+            <!-- Muestra "no vinculado" por ahora -->
+            <a href="#">Reporte de Marcaciones</a>
+            <!-- NUEVO -->
+            <a href="#">Solicitudes</a>
+          </div>
+        </div>
+
+        <!-- Grupo: Sistema -->
+        <div class="menu-group">
+          <button class="menu-toggle"><i class='bx bx-cog'></i> <span>Sistema</span></button>
+          <div class="submenu">
+            <!-- Usuarios usa API pública; Configuración se mantiene en mock (sin cambios) -->
+            <a href="#">Usuarios</a>
+            <a href="#">Configuración</a>
+          </div>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- =============== Contenido principal =============== -->
+    <main class="main-content">
+      <!-- Header superior -->
+      <header class="main-header">
+        <div class="header-left">
+          <!-- Botón Home: cierra sidebar y carga dashboard (gráficas) -->
+          <button id="btn-home" title="Inicio" class="btn-home">
+            <i class='bx bx-home'></i> Home
+          </button>
+        </div>
+        <div class="user-info">
+          <span>admin</span>
+          <i class='bx bxs-user-circle'></i>
+        </div>
+      </header>
+
+      <!-- Contenedor donde se renderizan tablas y gráficos -->
+      <section class="main-section">
+        <h1>Bienvenido al Sistema de Ponche</h1>
+      </section>
+    </main>
+  </div>
+
+  <!-- Lógica de la app -->
+  <script type="module" src="app.js" defer></script>
+</body>
+</html>
+
+<!--      <section class="main-section">     -->
