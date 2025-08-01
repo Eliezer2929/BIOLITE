@@ -17,6 +17,7 @@ const traducciones = {
   Usuarios: { id: "ID", name: "Nombre", username: "Usuario", email: "Correo" },
   Empleado: { id: "ID", employee_name: "Nombre", employee_salary: "Salario", employee_age: "Edad" },
   Configuración: { key: "Clave", value: "Valor" },
+  Departamento: { id: "ID", nombre: "Nombre", descripcion: "Descripción" },
   // Agrega otras traducciones si las usas
 };
 
@@ -117,6 +118,42 @@ function ensureRenuncias() {
     document.head.appendChild(s);
   });
 }
+
+// Cargador perezoso para departamento
+let _departamentoReady = false;
+function ensureDepartamentos() {
+  return new Promise((resolve,reject) => {
+    if (window.DepartamentoRender) return resolve();
+    const s = document.createElement("script");
+    s.src = "./js/departamento.js";
+    s.async = true;
+    s.onload = () => { _departamentoReady = true; resolve(); };
+    s.onerror = () => reject(new Error("Error al cargar departamento.js"));
+    document.head.appendChild(s);
+  });
+}
+
+// Cargador perezoso para cargos
+let _cargoReady = false;
+function ensureCargo() {
+  return new Promise((resolve, reject) => {
+    if (window.CargosRender) return resolve();
+    const s = document.createElement("script");
+    s.src = "./js/cargo.js"; // ruta correcta al archivo cargo.js
+    s.async = true;
+    s.onload = () => {
+      _cargoReady = true;
+      resolve();
+    };
+    s.onerror = () => reject(new Error("Error cargando cargo.js"));
+    document.head.appendChild(s);
+  });
+}
+
+
+
+
+      
 
 /* ===== Sidebar / Submenús ===== */
 floatingToggle.addEventListener("click", () => {
@@ -239,12 +276,34 @@ submenuLinks.forEach(link => {
       }
     }
 
+    if (nombreTabla === "Departamento") {
+      try {
+        await ensureDepartamentos();
+        return window.DepartamentoRender(mainSection, { limit: 10 });
+      } catch (err) {
+        return showError("Departamento", err);
+      }
+    }
+
+    if (nombreTabla === "Cargo") {
+      try {
+        await ensureCargo();
+        return window.CargosRender(mainSection, { limit: 10 });
+      } catch (err) {
+        return showError("Cargo", err);
+      }
+    }
+
+
+
+
     if (!ENDPOINTS[nombreTabla]) return showNotLinked(nombreTabla);
 
     await ensurePaginacion();
     window.Paginacion.loadView(nombreTabla, { page: 1, limit: 10 });
   });
 });
+
 
 /* ===== Home (gráficas) ===== */
 btnHome.addEventListener("click", () => {
