@@ -1,0 +1,167 @@
+/* ===== Estilo general de secciones ===== */
+.titulo {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.acciones-tabla {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.acciones-tabla button {
+  background: #eee;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: 0.2s ease;
+}
+
+.acciones-tabla button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.acciones-tabla .btn-agregar {
+  background: #e0f7fa;
+}
+
+.acciones-tabla .btn-editar {
+  background: #fff3e0;
+}
+
+.acciones-tabla .btn-eliminar {
+  background: #ffebee;
+}
+
+/* ===== Buscador ===== */
+.buscador {
+  margin-bottom: 1rem;
+}
+
+.buscador input {
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  width: 100%;
+  max-width: 300px;
+  font-size: 0.9rem;
+}
+
+/* ===== Tabla ===== */
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.tabla th,
+.tabla td {
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.tabla thead {
+  background: #f5f5f5;
+}
+
+.tabla tbody tr {
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.tabla tbody tr:hover {
+  background: #f9f9f9;
+}
+
+.tabla tbody tr.seleccionado {
+  background: #e0f7fa;
+}
+
+/* ===== Modal ===== */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal.oculto {
+  display: none;
+}
+
+.modal-contenido {
+  background: white;
+  padding: 20px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.modal-contenido h3 {
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  color: #444;
+}
+
+.modal-contenido label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+}
+
+.modal-contenido input {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+.modal-acciones {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.modal-acciones .btn-confirmar,
+.modal-acciones .btn-cancelar {
+  background: #e0f2f1;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-acciones .btn-confirmar {
+  background: #c8e6c9;
+}
+
+.modal-acciones .btn-cancelar {
+  background: #ffcdd2;
+}

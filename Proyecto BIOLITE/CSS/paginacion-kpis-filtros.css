@@ -1,0 +1,102 @@
+/* ===== Paginación simple ===== */
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  padding: 0.5rem;
+}
+.pagination button {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+}
+.pagination button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+.pagination .pagination-info {
+  margin: 0 0.5rem;
+  color: #4b5563;
+  font-size: 0.95rem;
+}
+
+/* ===== Vista tipo "Asistencia" (demo) ===== */
+.page-title {
+  display: flex; align-items: center; gap: .6rem; font-weight: 700;
+  color: #111827; margin-bottom: .8rem;
+}
+.page-title i { font-size: 22px; color: #374151; }
+
+.kpis {
+  display: grid; grid-template-columns: repeat(6, minmax(120px, 1fr));
+  gap: .8rem; margin: 1rem 0;
+}
+.kpi {
+  background: #fff; border-radius: 12px; padding: .9rem;
+  box-shadow: 0 4px 14px rgba(0,0,0,.06); text-align: center;
+}
+.kpi .big { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+.kpi .label { margin-top: .25rem; font-size: .9rem; color: #4b5563; }
+.kpi.green  .big { color: #22c55e; }
+.kpi.red    .big { color: #ef4444; }
+.kpi.purple .big { color: #7c3aed; }
+.kpi.teal   .big { color: #14b8a6; }
+.kpi.blue   .big { color: #3b82f6; }
+.kpi.gray   .big { color: #6b7280; }
+
+.filter-bar {
+  display: grid; grid-template-columns: repeat(6, minmax(160px, 1fr)) auto;
+  gap: .6rem; align-items: center; margin: .6rem 0 1rem;
+}
+.filter {
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
+  padding: .45rem .6rem; display: flex; align-items: center; gap: .4rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.filter i { color: #6b7280; }
+.filter select, .filter input {
+  border: none; outline: none; background: transparent; width: 100%;
+  color: #111827; font-size: .95rem;
+}
+.actions-right {
+  display: flex; gap: .5rem; justify-content: flex-end;
+}
+.actions-right .btn {
+  border-radius: 999px; padding: .45rem .8rem; border: 1px solid #91bdf6; background: #91bdf6;
+}
+
+/* Chips/píldoras */
+.chip {
+  display: inline-block; padding: .25rem .55rem; border-radius: 999px;
+  font-size: .85rem; font-weight: 600;
+}
+.chip.blue { background: #e0f2fe; color: #075985; }
+.chip.gray { background: #f3f4f6; color: #374151; }
+.chip.red  { background: #fee2e2; color: #991b1b; }
+
+/* Botón "Ver" vertical */
+.btn-pill {
+  padding: .35rem .75rem; border-radius: 999px; background: #6d28d9; color: #fff;
+  border: none; cursor: pointer;
+}
+.btn-pill:hover { filter: brightness(.95); }
+
+/* Mejoras de tabla para esta vista */
+.table-card table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.table-card thead th { position: sticky; top: 0; background: #8092a4; z-index: 1; }
+.table-card th, .table-card td { padding: 10px 12px; border-bottom: 1px solid #eef2f7; }
+
+/* ===== Badges compactas (Solicitudes) ===== */
+.badge{
+  display:inline-block;padding:.22rem .55rem;border-radius:999px;
+  font-size:.85rem;font-weight:600;line-height:1.1;border:1px solid transparent
+}
+.badge.pending{background:#fff7ed;border-color:#fde68a;color:#92400e}
+.badge.approved{background:#ecfdf5;border-color:#a7f3d0;color:#166534}
+.badge.denied{background:#fef2f2;border-color:#fecaca;color:#991b1b}

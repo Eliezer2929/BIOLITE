@@ -1,0 +1,71 @@
+/* =================== Sidebar =================== */
+.sidebar {
+  width: 240px;
+  background-color: #2e3b4e;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: width 0.3s ease;
+}
+
+/* Header del sidebar */
+.sidebar-header {
+  padding: 1rem;
+  border-bottom: 1px solid #444;
+}
+.sidebar-header h2 {
+  margin-bottom: 5px;
+}
+
+/* Botones/enlaces del menú */
+.menu a, .menu-toggle {
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: white;
+  transition: background 0.3s;
+  background: none;
+  border: none;
+  width: 100%;
+  font-size: 1rem;
+  cursor: pointer;
+  text-align: left;
+}
+.menu-toggle:hover,
+.menu a:hover,
+.menu a.active {
+  background-color: #44566c;
+}
+.menu-toggle i,
+.menu a i {
+  margin-right: 0.8rem;
+}
+.menu a span,
+.menu-toggle span {
+  transition: opacity 0.3s ease;
+}
+
+/* Estructura de grupos y submenús */
+.menu-group {
+  display: flex;
+  flex-direction: column;
+}
+.submenu {
+  display: none;
+  flex-direction: column;
+  padding-left: 2rem;
+  background-color: #36465d;
+}
+.submenu a {
+  padding: 0.7rem 1rem;
+  font-size: 0.95rem;
+  transition: background 0.3s;
+}
+.submenu a:hover {
+  background-color: #50637a;
+}
+.menu-group.open .submenu {
+  display: flex;
+}

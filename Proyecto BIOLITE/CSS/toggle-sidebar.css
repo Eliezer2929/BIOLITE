@@ -1,0 +1,39 @@
+/* =================== Toggle flotante del sidebar =================== */
+.floating-toggle {
+  position: absolute;
+  top: 10px;
+  right: -15px;
+  width: 30px;
+  height: 30px;
+  background: #99aec8;
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  z-index: 100;
+}
+.floating-toggle i {
+  font-size: 18px;
+  color: #333;
+  transition: transform 0.3s ease;
+}
+
+/* Sidebar colapsado */
+.sidebar.collapsed {
+  width: 60px;
+}
+.sidebar.collapsed .menu a span,
+.sidebar.collapsed .menu-toggle span,
+.sidebar.collapsed .sidebar-header h2 {
+  display: none;
+}
+.sidebar.collapsed .menu a,
+.sidebar.collapsed .menu-toggle {
+  justify-content: center;
+}
+.sidebar.collapsed .floating-toggle i {
+  transform: rotate(180deg);
+}

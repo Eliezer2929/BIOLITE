@@ -1,0 +1,17 @@
+/* =================== Reset general =================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* =================== Layout base =================== */
+body {
+  font-family: sans-serif;
+  background: #f4f4f4;
+}
+
+.app {
+  display: flex;
+  height: 100vh;
+}

@@ -1,0 +1,237 @@
+/* ===== Modal sencillo (Solicitudes) ===== */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.35);
+  display:flex; align-items:center; justify-content:center; z-index:2000;
+}
+.modal-box {
+  background:#fff; width:min(480px,94vw); border-radius:12px;
+  box-shadow:0 10px 30px rgba(0,0,0,.2); overflow:hidden;
+}
+.modal-box header { padding:12px 16px; font-weight:700; border-bottom:1px solid #eee; }
+.modal-box .body  { padding:16px; }
+.modal-box .field { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+.modal-box .field input,
+.modal-box .field select,
+.modal-box .field textarea {
+  padding:.5rem .6rem; border:1px solid #d1d5db; border-radius:8px; background:#fff;
+}
+.modal-box .actions {
+  display:flex; justify-content:flex-end; gap:.5rem; padding:12px 16px; border-top:1px solid #eee;
+}
+.btn.primary { background:#1e88e5; color:#fff; border:1px solid #1e88e5; font-size: 10px; padding: 10px 20px; }
+.btn.ghost   { background:#fff; color:#374151; border:1px solid #d1d5db; font-size: 10px; padding: 10px 20px;}
+
+/* ===== Modal compacto, suave (inputs tipo píldora) ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.28);backdrop-filter:blur(2px);
+  display:flex;align-items:center;justify-content:center;z-index:2000}
+.modal-box{width:min(560px,94vw);background:#fff;border-radius:18px;border:1px solid #e8eef6;
+  box-shadow:0 14px 36px rgba(0,0,0,.14);overflow:hidden;transform:scale(.985);animation:modalIn .12s ease-out forwards}
+@keyframes modalIn{to{transform:scale(1)}}
+.modal-box header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;
+  font-weight:700;color:#111827;background:#fff;border-bottom:1px solid #eef2f7}
+.modal-box .body{padding:14px}
+.modal-box .actions{display:flex;justify-content:flex-end;gap:.5rem;padding:10px 16px;border-top:1px solid #eef2f7}
+
+/* Campos */
+.modal-box .field{display:flex;flex-direction:column;gap:6px}
+.modal-box .field label{font-size:.9rem;color:#4b5563}
+.modal-box .field input,
+.modal-box .field select{
+  height:44px;padding:0 .85rem;border:1px solid #e5e7eb;border-radius:999px;
+  background:#f6f8fc;outline:none;transition:border-color .15s,box-shadow .15s,background-color .15s
+}
+.modal-box .field textarea{
+  padding:.6rem .85rem;border:1px solid #e5e7eb;border-radius:14px;background:#f6f8fc;min-height:72px;
+  outline:none;transition:border-color .15s,box-shadow .15s,background-color .15s;resize:vertical
+}
+.modal-box .field input:focus,
+.modal-box .field select:focus,
+.modal-box .field textarea:focus{border-color:#1e88e5;box-shadow:0 0 0 3px rgba(30,136,229,.12);background:#fafdff}
+.modal-box .field select{appearance:none;background-position:right .85rem center;background-repeat:no-repeat}
+
+/* Grid del formulario */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem .9rem}
+@media (max-width:640px){.grid-2{grid-template-columns:1fr}}
+
+/* Chip de archivo (más redondo y notorio) */
+.file-chip{
+  display:inline-flex;align-items:center;gap:.45rem;padding:.5rem .8rem;border-radius:999px;
+  background:#c1abe5;color:#fff;cursor:pointer;border:1px solid #c1abe5;
+  box-shadow:0 2px 6px rgba(109,40,217,.25);transition:filter .15s
+}
+.file-chip:hover{filter:brightness(.96)}
+
+/* Botón cerrar */
+.icon-btn{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid #e5e7eb;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;
+  transition:background-color .15s,border-color .15s,transform .05s}
+.icon-btn:hover{background:#eef2f7;border-color:#d1d5db}
+.icon-btn:active{transform:translateY(1px)}
+
+/* Botones del modal (suaves) */
+.btn.ghost{background:#fff;color:#374151;border:1px solid #d1d5db;border-radius:12px}
+.btn.primary{background:#1e88e5;color:#fff;border:1px solid #1e88e5;border-radius:12px}
+.btn.sm{padding:.22rem .5rem;font-size:.9rem;border-radius:10px}
+
+/* ===== Acciones en tabla: botones icono, redondos y pequeños ===== */
+.table-card td.actions{white-space:nowrap}
+.btn-icon{
+  width:30px;height:30px;border-radius:999px;border:1px solid transparent;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;transition:transform .05s,filter .15s
+}
+.btn-icon:active{transform:translateY(1px)}
+.btn-icon.accept{background:#ecfdf5;border-color:#a7f3d0;color:#166534}
+.btn-icon.accept:hover{filter:brightness(.96)}
+.btn-icon.reject{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+.btn-icon.reject:hover{filter:brightness(.96)}
+
+
+/* ==== Diseno de Renuncia ==== */
+.tabla-estilizada {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+}
+
+.tabla-estilizada th,
+.tabla-estilizada td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.tabla-estilizada th {
+  background-color: #1976d2;
+  color: white;
+  font-weight: 600;
+}
+
+.tabla-estilizada tr:nth-child(even) {
+  background-color: #f5f5f5;
+}
+
+.tabla-estilizada tr:hover {
+  background-color: #e3f2fd;
+}
+
+.top-bar {
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.top-bar input[type="text"] {
+  width: 220px;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.btn-primario {
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primario:hover {
+  background-color: #115293;
+}
+
+.btn-accion {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  margin-right: 6px;
+}
+
+.btn-accion:hover {
+  color: #1976d2;
+}
+
+.modal {
+  display: none; /* oculto por defecto */
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0,0,0,0.4);
+  overflow: auto;
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: 5% auto;
+  padding: 1.5rem;
+  border-radius: 8px;
+  max-width: 480px;
+  box-shadow: 0 5px 15px rgba(0,0,0,.3);
+  position: relative;
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  position: absolute;
+  top: 8px;
+  right: 14px;
+  transition: color 0.3s ease;
+}
+
+.close:hover,
+.close:focus {
+  color: #1976d2;
+}
+
+.form-estilizado label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.form-estilizado input[type="date"],
+.form-estilizado select,
+.form-estilizado textarea {
+  width: 100%;
+  padding: 7px 10px;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.form-estilizado button {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  background-color: #1976d2;
+  color: white;
+  transition: background-color 0.3s ease;
+}
+
+.form-estilizado button:hover {
+  background-color: #115293;
+}

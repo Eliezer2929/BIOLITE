@@ -1,0 +1,42 @@
+/* =================== Header principal =================== */
+.main-content {
+  flex: 1;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.main-header {
+  background-color: #1e88e5;
+  color: white;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between; /* separa 'Home' y usuario */
+  align-items: center;
+}
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+/* Botón Home */
+.btn-home {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+.btn-home:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Sección principal donde se dibujan tablas/gráficas */
+.main-section {
+  padding: 2rem;
+}
