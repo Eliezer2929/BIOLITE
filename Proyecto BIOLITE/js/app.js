@@ -150,6 +150,26 @@ function ensureCargo() {
   });
 }
 
+<<<<<<< HEAD
+=======
+// Cargador perezoso para turnos
+
+let _turnoReady = false;
+function ensureTurno() {
+  return new Promise((resolve, reject) => {
+    if (window.TurnoRender) return resolve();
+    const s = document.createElement("script");
+    s.src = "./js/turno.js";
+    s.async = true;
+    s.onload = () => {
+      _turnoReady = true;
+      resolve();
+    };
+    s.onerror = () => reject(new Error("Error cargando turno.js"));
+    document.head.appendChild(s);
+  });
+}
+>>>>>>> 352ce9e (Agrego nuevos módulos)
 
 
 
@@ -233,8 +253,10 @@ submenuLinks.forEach(link => {
     e.preventDefault();
     const nombreTabla = link.dataset.view || link.textContent.trim();
 
+
     if (nombreTabla === "Reporte de Marcaciones") {
       try {
+        await ensureTurno(); // Cargamos turnos antes
         await ensureAsistencia();
         return window.Asistencia.render(mainSection);
       } catch (err) {
@@ -294,6 +316,19 @@ submenuLinks.forEach(link => {
       }
     }
 
+<<<<<<< HEAD
+=======
+    if (nombreTabla === "Turnos") {
+      try {
+        await ensureTurno();
+        return window.Turnos.render(mainSection, { limit: 10 });
+      } catch (err) {
+        return showError("Turnos", err);
+      }
+    }
+
+
+>>>>>>> 352ce9e (Agrego nuevos módulos)
 
 
 

@@ -64,12 +64,13 @@
         <div class="menu-group">
           <button class="menu-toggle"><i class='bx bx-calendar-check'></i> <span>Asistencia</span></button>
           <div class="submenu">
-            <!-- Muestra "no vinculado" por ahora -->
-            <a href="#">Reporte de Marcaciones</a>
-            <!-- NUEVO -->
-            <a href="#">Solicitudes</a>
+            <a href="#" data-view="Reporte de Marcaciones">Reporte de Marcaciones</a>
+            <a href="#" data-view="Solicitudes">Solicitudes</a>
+            <!-- Nuevo enlace Turnos -->
+            <a href="#" data-view="Turnos">Turnos</a>
           </div>
         </div>
+
 
         <!-- Grupo: Sistema -->
         <div class="menu-group">
@@ -109,6 +110,10 @@
   
 
   <!-- Lógica de la app -->
-  <script type="module" src="./js/app.js" defer></script>
+<script src="./js/turno.js" defer></script>
+<script src="./js/asistencia.js" defer></script>
+<script type="module" src="./js/app.js" defer></script>
+
+
 </body>
 </html>

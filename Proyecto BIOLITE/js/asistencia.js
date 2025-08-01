@@ -48,32 +48,57 @@
     el.innerHTML = `<h2>Error cargando "Reporte de Marcaciones".</h2>${err ? `<p>${err.message || err}</p>` : ""}`;
   }
 
-  async function fetchRows() {
-    const res = await fetch(API);
-    const data = await res.json();
-    const users = Array.isArray(data.results) ? data.results : [];
-    return users.map((u, idx) => {
-      const sim = simulateAttendance();
-      const nombre = `${u.name.first} ${u.name.last}`.replace(/\b\w/g, c => c.toUpperCase());
-      return {
-        id: (u.id?.value || u.login?.uuid || idx + 1).toString().replace(/\W/g, "").slice(0, 6),
-        nombre,
-        nivel: ["Proyecto Abc","Sucursal 1","Sucursal 2"][Math.floor(Math.random()*3)],
-        lugar: ["Oficina Central","Planta Norte","Sucursal Centro"][Math.floor(Math.random()*3)],
-        horario: "08:00 | 17:00",
-        marcaciones: sim.present ? (2 + Math.floor(Math.random()*2)) : 0,
-        horas: sim.present ? minutesToHHMM(8*60 - sim.tardyMin - sim.earlyMin - (sim.lunchExt ? 20 : 0) + sim.overtime) : "--:--",
-        cargo: sim.present ? minutesToHHMM(9*60 - (60 + sim.tardyMin)) : "--:--",
-        estado: sim.present ? (sim.tardyMin > 0 ? "Tarde" : "Ok") : "Ausente",
-        retiro: sim.present ? minutesToHHMM(sim.earlyMin) : "--:--",
-        present: sim.present,
-        tardyMin: sim.tardyMin,
-        lunchExt: sim.lunchExt,
-        earlyMin: sim.earlyMin,
-        overtime: sim.overtime,
-      };
-    });
-  }
+async function fetchRows() {
+  await window.Turnos.ensureTurnos(); // ✅ Aseguramos que los turnos estén listos
+
+  const res = await fetch(API);
+  const data = await res.json();
+  const users = Array.isArray(data.results) ? data.results : [];
+
+  return users.map((u, idx) => {
+    const sim = simulateAttendance();
+    const nombre = `${u.name.first} ${u.name.last}`.replace(/\b\w/g, c => c.toUpperCase());
+    const id = (u.id?.value || u.login?.uuid || idx + 1).toString().replace(/\W/g, "").slice(0, 6);
+
+    // ✅ Ahora sí podemos buscar por nombre
+    const turno = window.Turnos.getTurnoPorEmpleado(nombre);
+
+    const entrada = turno?.inicio || "--:--";
+    const salida = turno?.fin || "--:--";
+    const horario = `${entrada} | ${salida}`;
+
+    function hhmmToMinutes(hhmm) {
+      const [h, m] = hhmm.split(":").map(Number);
+      return h * 60 + m;
+    }
+
+    const entradaMin = turno?.inicio ? hhmmToMinutes(turno.inicio) : 480;
+    const llegadaMinSim = entradaMin + sim.tardyMin;
+
+    const estado = sim.present
+      ? (sim.tardyMin > 0 ? "Tarde" : "Ok")
+      : "Ausente";
+
+    return {
+      id,
+      nombre,
+      nivel: ["Proyecto Abc", "Sucursal 1", "Sucursal 2"][Math.floor(Math.random() * 3)],
+      lugar: ["Oficina Central", "Planta Norte", "Sucursal Centro"][Math.floor(Math.random() * 3)],
+      horario,
+      marcaciones: sim.present ? (2 + Math.floor(Math.random() * 2)) : 0,
+      horas: sim.present ? minutesToHHMM(8 * 60 - sim.tardyMin - sim.earlyMin - (sim.lunchExt ? 20 : 0) + sim.overtime) : "--:--",
+      cargo: sim.present ? minutesToHHMM(9 * 60 - (60 + sim.tardyMin)) : "--:--",
+      estado,
+      retiro: sim.present ? minutesToHHMM(sim.earlyMin) : "--:--",
+      present: sim.present,
+      tardyMin: sim.tardyMin,
+      lunchExt: sim.lunchExt,
+      earlyMin: sim.earlyMin,
+      overtime: sim.overtime,
+    };
+  });
+}
+
 
   // ---- Render principal (estructura fija: KPIs + filtros + tabla + paginación) ----
   function renderShell(container, kpisHtml, tableHtml, paginationHtml) {
