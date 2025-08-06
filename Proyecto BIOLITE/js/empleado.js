@@ -1,3 +1,5 @@
+// empleados.js
+
 (function () {
   const LSK = "empleados_data_v1";
 
@@ -7,6 +9,7 @@
     page: 1,
     limit: 10,
     apiUrl: null,
+    dataLoaded: false,
   };
 
   function loadLS() {
@@ -214,6 +217,18 @@
 
     state.rows = combined;
     saveLS(combined);
+    state.dataLoaded = true;
+  }
+
+  // Función para esperar que los datos estén cargados (para otros módulos)
+  async function waitForDataLoaded(maxRetries = 15, delay = 200) {
+    for (let i = 0; i < maxRetries; i++) {
+      if (state.dataLoaded && state.rows.length > 0) {
+        return state.rows;
+      }
+      await new Promise(res => setTimeout(res, delay));
+    }
+    return []; // si no se cargan, retornar vacío
   }
 
   async function render(container, opts = {}) {
@@ -226,5 +241,11 @@
     await draw();
   }
 
-  window.Empleados = { render };
+  window.Empleados = {
+    render,
+    getData: () => state.rows,
+    waitForDataLoaded,
+  };
+
+
 })();

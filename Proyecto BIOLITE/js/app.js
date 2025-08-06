@@ -320,8 +320,9 @@ submenuLinks.forEach(link => {
 =======
     if (nombreTabla === "Turnos") {
       try {
-        await ensureTurno();
-        return window.Turnos.render(mainSection, { limit: 10 });
+        await ensureEmpleados(); // Asegura que los empleados estén cargados
+        await ensureTurno();     // Luego carga turnos
+        return window.Turnos.init(mainSection);
       } catch (err) {
         return showError("Turnos", err);
       }
@@ -329,6 +330,8 @@ submenuLinks.forEach(link => {
 
 
 >>>>>>> 352ce9e (Agrego nuevos módulos)
+
+
 
 
 

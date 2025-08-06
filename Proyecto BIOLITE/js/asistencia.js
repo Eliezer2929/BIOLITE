@@ -49,7 +49,6 @@
   }
 
 async function fetchRows() {
-  await window.Turnos.ensureTurnos(); // ✅ Aseguramos que los turnos estén listos
 
   const res = await fetch(API);
   const data = await res.json();

@@ -1,287 +1,175 @@
-(function () {
-  const LSK = "turnos_data_v1";
-
-  // Horarios fijos para cada turno
-  const TURNOS_FIJOS = {
-    Diurno: { inicio: "08:00", fin: "16:00" },
-    Tarde: { inicio: "16:00", fin: "00:00" },
-    Nocturno: { inicio: "00:00", fin: "08:00" },
-  };
+const Turnos = (() => {
+  const LSK = "turnos_asignados_v1";
 
   const state = {
     container: null,
-    rows: [],
-    page: 1,
-    limit: 10,
+    empleados: [],
+    turnosAsignados: [],
+    dataLoaded: false,
   };
 
-  /* ---------- Storage ---------- */
-  const loadLS = () => {
-    try { return JSON.parse(localStorage.getItem(LSK) || "[]"); }
-    catch { return []; }
-  };
-  const saveLS = (rows) => {
-    try { localStorage.setItem(LSK, JSON.stringify(rows)); }
-    catch {}
+  const TURNOS = {
+    Diurno: "08:00 - 16:00",
+    Tarde: "16:00 - 00:00",
+    Nocturno: "00:00 - 08:00",
   };
 
-  function ensureTurnos() {
-    if (!localStorage.getItem(LSK)) {
-      localStorage.setItem(LSK, JSON.stringify([]));
+  function cargarTurnosLocales() {
+    const data = localStorage.getItem(LSK);
+    return data ? JSON.parse(data) : [];
+  }
+
+  function guardarTurnosLocales(data) {
+    localStorage.setItem(LSK, JSON.stringify(data));
+  }
+
+  async function obtenerEmpleados() {
+    try {
+      if (!window.Empleados || typeof window.Empleados.waitForDataLoaded !== "function") {
+        throw new Error("El módulo Empleados no está disponible o no tiene waitForDataLoaded.");
+      }
+
+      const empleados = await window.Empleados.waitForDataLoaded();
+      return Array.isArray(empleados) ? empleados : [];
+    } catch (error) {
+      console.error("Error cargando empleados:", error.message);
+      return [];
     }
   }
 
-  /* ---------- Helpers ---------- */
-  function fmtTime(t) {
-    if (!t) return "";
-    const [h, m] = t.split(":");
-    return `${h.padStart(2,"0")}:${m.padStart(2,"0")}`;
-  }
+  function crearFilaEmpleado(emp) {
+    const tr = document.createElement("tr");
 
-  function genId() {
-    return String(Math.floor(100000 + Math.random() * 899999));
-  }
+    const tdNombre = document.createElement("td");
+    tdNombre.textContent = emp.employee_name || "N/A";
 
-  /* ---------- Render HTML ---------- */
-  function renderShell(container, tableHtml, paginationHtml) {
-    container.innerHTML = `
-      <div class="page-title"><i class='bx bx-time'></i> <span>Asignación de Turnos</span></div>
-      <div class="actions-bar">
-        <button class="btn primary" id="btn-add">Asignar nuevo turno</button>
-      </div>
-      <div class="table-card">${tableHtml}</div>
-      ${paginationHtml}
-    `;
-  }
+    const tdCedula = document.createElement("td");
+    tdCedula.textContent = emp.id || "N/A";
 
-  function tableHTML(pageRows) {
-    return `
-      <table>
-        <thead>
-          <tr>
-            <th>ID Turno</th>
-            <th>Empleado</th>
-            <th>Turno</th>
-            <th>Horario</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${pageRows.map(r => `
-            <tr data-id="${r.idTurno}">
-              <td>${r.idTurno}</td>
-              <td>${r.empleadoNombre}</td>
-              <td>${r.turno}</td>
-              <td>${fmtTime(r.inicio)} - ${fmtTime(r.fin)}</td>
-              <td class="actions">
-                <button class="btn-icon edit" title="Editar"><i class='bx bx-edit'></i></button>
-                <button class="btn-icon delete" title="Eliminar"><i class='bx bx-trash'></i></button>
-              </td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    `;
-  }
+    const tdTurno = document.createElement("td");
+    const select = document.createElement("select");
 
-  function paginationHTML(total, page, limit) {
-    const totalPages = Math.max(1, Math.ceil(total / limit));
-    return `
-      <div class="pagination">
-        <button id="pag-first" ${page <= 1 ? "disabled" : ""}>«</button>
-        <button id="pag-prev" ${page <= 1 ? "disabled" : ""}>‹</button>
-        <span class="pagination-info">Página ${Math.min(page, totalPages)} de ${totalPages} • ${total} turnos</span>
-        <button id="pag-next" ${page >= totalPages ? "disabled" : ""}>›</button>
-        <button id="pag-last" ${page >= totalPages ? "disabled" : ""}>»</button>
-      </div>
-    `;
-  }
+    select.innerHTML = `<option value="">Seleccionar</option>` +
+      Object.keys(TURNOS)
+        .map(turno => `<option value="${turno}">${turno}</option>`)
+        .join("");
 
-  function slicePage(rows, page, limit) {
-    const start = (page - 1) * limit;
-    return rows.slice(start, start + limit);
-  }
+    const asignado = state.turnosAsignados.find(t => t.id === emp.id);
+    if (asignado) {
+      select.value = asignado.turno;
+    }
 
-  /* ---------- Modal ---------- */
-  function openModal(editData) {
-    return new Promise(resolve => {
-      const overlay = document.createElement("div");
-      overlay.className = "modal-overlay";
-
-      // Obtener empleados de window.Empleados.rows (o ajusta el path según tu empleados.js)
-      const empleados = (window.Empleados && window.Empleados.rows) || [];
-      const opcionesEmpleados = empleados.length > 0
-        ? empleados.map(e => `<option value="${e.employee_name}">${e.employee_name}</option>`).join("")
-        : `<option value="">No hay empleados disponibles</option>`;
-
-      // Valor seleccionado si es edición
-      const selectedTurno = editData?.turno || "";
-      const selectedEmpleado = editData?.empleadoNombre || "";
-
-      overlay.innerHTML = `
-        <div class="modal-box">
-          <header>
-            <span>${editData ? "Editar turno" : "Asignar nuevo turno"}</span>
-            <button class="icon-btn" id="m-close"><i class='bx bx-x'></i></button>
-          </header>
-          <div class="body">
-            <div class="field">
-              <label>Empleado</label>
-              <select id="m-empleadoNombre" autofocus>
-                <option value="">-- Selecciona un empleado --</option>
-                ${opcionesEmpleados}
-              </select>
-            </div>
-            <div class="field">
-              <label>Turno</label>
-              <select id="m-turno">
-                <option value="">-- Selecciona un turno --</option>
-                <option value="Diurno" ${selectedTurno === "Diurno" ? "selected" : ""}>Diurno</option>
-                <option value="Tarde" ${selectedTurno === "Tarde" ? "selected" : ""}>Tarde</option>
-                <option value="Nocturno" ${selectedTurno === "Nocturno" ? "selected" : ""}>Nocturno</option>
-              </select>
-            </div>
-          </div>
-          <div class="actions">
-            <button class="btn ghost" id="m-cancel">Cancelar</button>
-            <button class="btn primary" id="m-save">Guardar</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(overlay);
-
-      // Preseleccionar empleado y turno si es edición
-      if (selectedEmpleado) {
-        overlay.querySelector("#m-empleadoNombre").value = selectedEmpleado;
+    select.addEventListener("change", () => {
+      const existe = state.turnosAsignados.find(t => t.id === emp.id);
+      if (existe) {
+        existe.turno = select.value;
+      } else {
+        state.turnosAsignados.push({ id: emp.id, turno: select.value });
       }
+      guardarTurnosLocales(state.turnosAsignados);
+      renderTabla();
+    });
 
-      const close = () => overlay.remove();
+    tdTurno.appendChild(select);
 
-      overlay.querySelector("#m-close").onclick = close;
-      overlay.querySelector("#m-cancel").onclick = () => { close(); resolve(null); };
+    const tdHorario = document.createElement("td");
+    tdHorario.textContent = asignado ? TURNOS[asignado.turno] || "—" : "—";
 
-      overlay.querySelector("#m-save").onclick = () => {
-        const empleadoNombre = overlay.querySelector("#m-empleadoNombre").value;
-        const turno = overlay.querySelector("#m-turno").value;
+    tr.appendChild(tdNombre);
+    tr.appendChild(tdCedula);
+    tr.appendChild(tdTurno);
+    tr.appendChild(tdHorario);
 
-        if (!empleadoNombre) {
-          alert("Por favor selecciona un empleado");
-          return;
-        }
-        if (!turno) {
-          alert("Por favor selecciona un turno");
-          return;
-        }
+    return tr;
+  }
 
-        // Extraer horas fijas según turno
-        const horario = TURNOS_FIJOS[turno];
-        if (!horario) {
-          alert("Turno no válido");
-          return;
-        }
+  async function renderTabla() {
+    const tbody = state.container.querySelector("tbody");
+    tbody.innerHTML = "";
 
-        close();
-        resolve({
-          empleadoNombre,
-          turno,
-          inicio: horario.inicio,
-          fin: horario.fin,
-        });
-      };
+    if (!state.empleados.length) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 4;
+      td.className = "no-empleados";
+      td.textContent = "No hay empleados disponibles.";
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      return;
+    }
+
+    state.empleados.forEach(emp => {
+      const tr = crearFilaEmpleado(emp);
+      tbody.appendChild(tr);
     });
   }
 
-  /* ---------- Render ---------- */
-  function draw() {
-    const all = state.rows;
-    const pageRows = slicePage(all, state.page, state.limit);
-
-    renderShell(state.container, tableHTML(pageRows), paginationHTML(all.length, state.page, state.limit));
-
-    const totalPages = Math.max(1, Math.ceil(all.length / state.limit));
-    const go = (p) => {
-      state.page = Math.min(Math.max(1, p), totalPages);
-      draw();
-    };
-
-    state.container.querySelector("#pag-first").onclick = () => go(1);
-    state.container.querySelector("#pag-prev").onclick = () => go(state.page - 1);
-    state.container.querySelector("#pag-next").onclick = () => go(state.page + 1);
-    state.container.querySelector("#pag-last").onclick = () => go(totalPages);
-
-    state.container.querySelector("#btn-add").onclick = async () => {
-      const data = await openModal(null);
-      if (data) {
-        // Verificar que el empleado no tenga turno ya asignado (opcional)
-        const yaAsignado = state.rows.find(r => r.empleadoNombre === data.empleadoNombre);
-        if (yaAsignado) {
-          if (!confirm(`El empleado ${data.empleadoNombre} ya tiene un turno asignado. ¿Quieres reemplazarlo?`)) return;
-          // Remover turno anterior
-          state.rows = state.rows.filter(r => r.empleadoNombre !== data.empleadoNombre);
-        }
-
-        const nuevo = {
-          idTurno: genId(),
-          empleadoNombre: data.empleadoNombre,
-          turno: data.turno,
-          inicio: data.inicio,
-          fin: data.fin,
-        };
-        state.rows.unshift(nuevo);
-        saveLS(state.rows);
-        state.page = 1;
-        draw();
-      }
-    };
-
-    state.container.querySelectorAll(".btn-icon.edit").forEach(btn => {
-      btn.onclick = async (e) => {
-        const id = e.currentTarget.closest("tr").dataset.id;
-        const turno = state.rows.find(t => t.idTurno === id);
-        if (!turno) return;
-
-        const data = await openModal(turno);
-        if (data) {
-          turno.empleadoNombre = data.empleadoNombre;
-          turno.turno = data.turno;
-          turno.inicio = data.inicio;
-          turno.fin = data.fin;
-          saveLS(state.rows);
-          draw();
-        }
-      };
-    });
-
-    state.container.querySelectorAll(".btn-icon.delete").forEach(btn => {
-      btn.onclick = (e) => {
-        const id = e.currentTarget.closest("tr").dataset.id;
-        const idx = state.rows.findIndex(t => t.idTurno === id);
-        if (idx === -1) return;
-        if (confirm("¿Eliminar este turno?")) {
-          state.rows.splice(idx, 1);
-          saveLS(state.rows);
-          draw();
-        }
-      };
-    });
-  }
-
-  async function render(container, opts = {}) {
+  async function render(container) {
     state.container = container;
-    state.limit = typeof opts.limit === "number" && opts.limit > 0 ? opts.limit : state.limit;
-    state.page = 1;
+    container.innerHTML = `
+      <section class="turnos-section">
+        <h2>Asignación de Turnos</h2>
+        <div class="tabla-turnos">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Cédula</th>
+                <th>Turno</th>
+                <th>Horario</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    `;
 
-    ensureTurnos();
-    state.rows = loadLS();
-    draw();
+    state.turnosAsignados = cargarTurnosLocales();
+    state.empleados = await obtenerEmpleados();
+    state.dataLoaded = true;
+    await renderTabla();
   }
 
-  window.Turnos = {
+  // Para asistencia.js u otros módulos
+  async function ensureTurnos() {
+    if (!state.dataLoaded) {
+      state.turnosAsignados = cargarTurnosLocales();
+      state.empleados = await obtenerEmpleados();
+      state.dataLoaded = true;
+    }
+  }
+
+  function getTurnoPorEmpleado(nombre) {
+    if (!state.dataLoaded || !Array.isArray(state.empleados)) return null;
+
+    const emp = state.empleados.find(e =>
+      (e.employee_name || "").toLowerCase().trim() === nombre.toLowerCase().trim()
+    );
+
+    if (!emp) return null;
+
+    const turnoAsignado = state.turnosAsignados.find(t => t.id === emp.id);
+    if (!turnoAsignado) return null;
+
+    const horario = TURNOS[turnoAsignado.turno];
+    if (!horario) return null;
+
+    const [inicio, fin] = horario.split(" - ");
+
+    return {
+      nombre: emp.employee_name,
+      turno: turnoAsignado.turno,
+      inicio,
+      fin,
+    };
+  }
+
+  return {
+    init: render,
     ensureTurnos,
-    getTurnoPorEmpleado: (nombre) => {
-      const all = loadLS();
-      return all.find(t => t.empleadoNombre?.toLowerCase() === nombre?.toLowerCase()) || null;
-    },
-    render,
+    getTurnoPorEmpleado,
   };
 })();
+
+window.Turnos = Turnos;
