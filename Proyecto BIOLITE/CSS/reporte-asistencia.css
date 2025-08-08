@@ -1,0 +1,465 @@
+/* Definición de variables CSS globales para usar a lo largo del archivo */
+:root {
+  --bg-color: #f5f6f8;                    /* Fondo general */
+  --container-bg: #ffffff;                /* Fondo de contenedores */
+  --text-color: #343a40;                  /* Color principal del texto */
+  --secondary-text: #6c757d;              /* Color de texto secundario */
+  --border-color: #e9ecef;                /* Color de bordes */
+  --primary-color: #0d6efd;               /* Color principal (azul) */
+  --patron-color: #fff;                   /* Color del texto para "patrón" */
+  --libre-bg: #e9ecef;                    /* Fondo para días libres */
+  --libre-color: #6c757d;                 /* Texto para días libres */
+  --active-bg: #f0f8ff;                   /* Fondo al hacer hover */
+  --horario-color: #d88b0a;               /* Color de texto para "horario" */
+  --horario-bg: #fff1d8;                  /* Fondo para horario */
+  --libre-card-color: #495057;            /* Texto para tarjetas de día libre */
+  --libre-card-bg: #e9ecef;               /* Fondo para tarjetas de día libre */
+  --work-card-color: #d88b0a;             /* Texto para tarjetas de trabajo */
+  --work-card-bg: #fff1d8;                /* Fondo para tarjetas de trabajo */
+  --modal-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Sombra para modal */
+  --modal-bg: #fff;                       /* Fondo para el modal */
+}
+
+/* Contenedor principal del dashboard */
+.dashboard-container {
+  background: var(--container-bg);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  padding: 2rem;
+}
+
+/* Encabezado del calendario */
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.calendar-header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Botones del encabezado */
+.calendar-header .header-actions button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+/* Botón primario */
+.calendar-header .header-actions .btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+/* Botón secundario */
+.calendar-header .header-actions .btn-secondary {
+  background-color: var(--libre-bg);
+  color: var(--text-color);
+}
+
+/* Barra de herramientas para filtros y controles */
+.toolbar {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+/* Ítem dentro de la barra de herramientas */
+.toolbar-item {
+  flex-grow: 1;
+  min-width: 150px;
+}
+
+/* Estilo para select e input en toolbar */
+.toolbar-item select,
+.toolbar-item input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--container-bg);
+}
+
+/* Icono personalizado del select */
+.toolbar-item select {
+  background-image: url("data:image/svg+xml,...");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 10px;
+}
+
+/* Tabla del calendario */
+.calendar-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: var(--container-bg);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Encabezado de la tabla */
+.calendar-table thead th {
+  background-color: var(--container-bg);
+  padding: 1rem 0.75rem;
+  font-weight: 700;
+  color: var(--secondary-text);
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Celdas de la tabla */
+.calendar-table tbody td {
+  padding: 0.75rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  height: 60px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Efecto hover sobre las filas */
+.calendar-table tbody tr:hover {
+  background-color: var(--active-bg);
+}
+
+/* Botón dentro de las celdas del calendario */
+.cell-button {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  height: 35px;
+}
+
+/* Diferentes estilos para tipos de celda */
+.cell-patron {
+  background-color: #212529;
+  color: var(--patron-color);
+}
+
+.cell-horario {
+  background-color: var(--horario-bg);
+  color: var(--horario-color);
+}
+
+.cell-libre {
+  background-color: var(--libre-card-bg);
+  color: var(--libre-card-color);
+}
+
+/* Fondo del modal (capa oscura detrás) */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Contenedor principal del modal */
+.modal {
+  background: var(--modal-bg);
+  border-radius: 12px;
+  box-shadow: var(--modal-shadow);
+  width: 90%;
+  max-width: 500px;
+  padding: 1.5rem;
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Animación de entrada para el modal */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Encabezado del modal */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+/* Botón para cerrar el modal */
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--secondary-text);
+  cursor: pointer;
+}
+
+/* Grupos de formularios dentro del modal */
+.modal-body .form-group {
+  margin-bottom: 1.5rem;
+}
+
+/* Etiquetas de los campos del formulario */
+.modal-body .form-group label {
+  font-weight: 500;
+  color: var(--secondary-text);
+  margin-bottom: 0.5rem;
+  display: block;
+  font-size: 12px;
+}
+
+/* Estructura de grilla para los campos */
+.modal-body .form-fields-grid {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr;
+  gap: 1rem;
+  align-items: end;
+}
+
+/* Estilo general para campos del modal */
+.modal-body select,
+.modal-body input[type="date"] {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--container-bg);
+  font-family: inherit;
+}
+
+/* Estilo para el ícono del calendario en input tipo fecha */
+.modal-body input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+/* Agrega un ícono visual de calendario */
+.modal-body input[type="date"]::after {
+  content: '🗓️';
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+/* Enfoque (focus) en inputs */
+.modal-body select:focus,
+.modal-body input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+/* Contenedor para campo de desfase con botones */
+.modal-body .desfase-input {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: var(--bg-color);
+}
+
+/* Input dentro del desfase */
+.modal-body .desfase-input input {
+  text-align: center;
+  border: none;
+  flex-grow: 1;
+  padding: 0.75rem 0.5rem;
+  background-color: var(--bg-color);
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+}
+
+/* Botones del desfase */
+.modal-body .desfase-input button {
+  padding: 0.75rem;
+  border: none;
+  background: var(--bg-color);
+  cursor: pointer;
+  width: 40px;
+  font-size: 1rem;
+  color: var(--secondary-text);
+  transition: background-color 0.2s;
+}
+
+/* Hover sobre botones de desfase */
+.modal-body .desfase-input button:hover {
+  background-color: var(--border-color);
+}
+
+/* Vista previa de días (7 tarjetas) */
+.modal-body .day-preview {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+/* Tarjeta individual de día */
+.modal-body .day-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0.5rem 0;
+  flex-grow: 1;
+  width: calc(100% / 7 - 0.5rem);
+}
+
+/* Texto del nombre del día */
+.modal-body .day-card p.day-name {
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--secondary-text);
+  font-size: 10px;
+}
+
+/* Botón dentro de la tarjeta */
+.modal-body .day-card .day-button {
+  width: 100%;
+  height: 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 0.2rem;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+/* Título dentro del botón */
+.modal-body .day-card .day-button h4 {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* Colores para estado de trabajo y libre */
+.modal-body .day-card .day-button.work {
+  background-color: #fff1d8;
+  color: #d88b0a;
+}
+
+.modal-body .day-card .day-button.free {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+/* Pie de modal */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+/* Botón dentro del pie del modal */
+.modal-footer button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+}
+
+/* Estilo del botón primario */
+.modal-footer .btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+/* Estilos duplicados del modal (redefinidos abajo con tamaño reducido) */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+/* Redefinición del modal con altura menor */
+.modal {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  width: 90%;
+  max-width: 820px;
+  max-height: 300px; /* Altura reducida aquí */
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.25);
+  position: relative;
+  animation: fadeIn 0.25s ease-in-out;
+  font-size: 0.9rem;
+  overflow: hidden; /* Evita que se salga nada del modal */
+}
+
+/* Cuerpo del modal con altura controlada */
+.modal-body {
+  max-height: 200px; /* También controlamos la altura del contenido */
+  overflow-y: auto;
+}
+
+/* Botón de cerrar en el modal */
+.modal .close-button {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: #333;
+}
+
+/* Repetición de la animación fadeIn */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
