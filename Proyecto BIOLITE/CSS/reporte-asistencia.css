@@ -256,6 +256,7 @@
   border-radius: 8px;
   background-color: var(--container-bg);
   font-family: inherit;
+  font-size: 1rem;
 }
 
 /* Estilo para el ícono del calendario en input tipo fecha */
@@ -463,3 +464,5 @@
     transform: scale(1);
   }
 }
+
+

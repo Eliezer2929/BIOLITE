@@ -150,8 +150,6 @@ function ensureCargo() {
   });
 }
 
-<<<<<<< HEAD
-=======
 // Cargador perezoso para turnos
 
 let _turnoReady = false;
@@ -169,7 +167,24 @@ function ensureTurno() {
     document.head.appendChild(s);
   });
 }
->>>>>>> 352ce9e (Agrego nuevos módulos)
+
+// Cargador perezoso para turnoGestion
+
+let _turnoGestionReady = false;
+function ensureTurnoGestion() {
+  return new Promise((resolve, reject) => {
+    if (window.TurnoGestion) return resolve();
+    const s = document.createElement("script");
+    s.src = "./js/turnoGestion.js";
+    s.async = true;
+    s.onload = () => {
+      _turnoGestionReady = true;
+      resolve();
+    };
+    s.onerror = () => reject(new Error("Error cargando turnoGestion.js"));
+    document.head.appendChild(s);
+  });
+}
 
 
 
@@ -316,20 +331,24 @@ submenuLinks.forEach(link => {
       }
     }
 
-<<<<<<< HEAD
-=======
     if (nombreTabla === "Turnos") {
       try {
-        await ensureEmpleados(); // Asegura que los empleados estén cargados
-        await ensureTurno();     // Luego carga turnos
-        return window.Turnos.init(mainSection);
+        await ensureTurno();
+        return window.Turnos.render(mainSection, { limit: 10 });
       } catch (err) {
         return showError("Turnos", err);
       }
     }
 
+    if (nombreTabla === "Gestión de Turnos") {
+      try {
+        await ensureTurnoGestion();
+        return window.TurnoGestion.render(mainSection, { /* opciones si quieres */ });
+      } catch (err) {
+        return showError("Gestión de Turnos", err);
+      }
+    }
 
->>>>>>> 352ce9e (Agrego nuevos módulos)
 
 
 

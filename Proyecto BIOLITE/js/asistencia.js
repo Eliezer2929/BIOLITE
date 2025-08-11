@@ -60,7 +60,10 @@ async function fetchRows() {
     const id = (u.id?.value || u.login?.uuid || idx + 1).toString().replace(/\W/g, "").slice(0, 6);
 
     // ✅ Ahora sí podemos buscar por nombre
-    const turno = window.Turnos.getTurnoPorEmpleado(nombre);
+const turno = window.Turnos && typeof window.Turnos.getTurnoPorEmpleado === 'function'
+  ? window.Turnos.getTurnoPorEmpleado(nombre)
+  : null;
+
 
     const entrada = turno?.inicio || "--:--";
     const salida = turno?.fin || "--:--";
