@@ -2,19 +2,23 @@
 // Módulo para manejar Renuncias con conexión a empleados
 
 (function () {
-  const LSK = "renuncias_data_v1";
-  const EMP_API = "https://dummy.restapiexample.com/api/v1/employees";  // Cambia si usas otra
+  // Constantes y estado inicial
+  const LSK = "renuncias_data_v1"; // Clave para almacenamiento local de renuncias
+  const EMP_API = "https://dummy.restapiexample.com/api/v1/employees";  // URL API empleados (puede cambiar)
 
+  // Estado interno del módulo
   const state = {
-    container: null,
-    renuncias: [],
-    empleados: [],
-    page: 1,
-    limit: 10,
-    apiUrl: null,
+    container: null,    // Elemento DOM contenedor donde se renderiza el módulo
+    renuncias: [],      // Array con los datos de renuncias
+    empleados: [],      // Array con datos de empleados (para mostrar nombres)
+    page: 1,            // Página actual para paginación
+    limit: 10,          // Límite de registros por página
+    apiUrl: null,       // URL API para renuncias (si aplica)
   };
 
-  // LocalStorage renuncias
+  // FUNCIONES DE LOCALSTORAGE PARA RENUNCIAS
+
+  // Carga de renuncias desde localStorage
   function loadLS() {
     try {
       return JSON.parse(localStorage.getItem(LSK) || "[]");
@@ -22,26 +26,29 @@
       return [];
     }
   }
+  // Guardar renuncias en localStorage
   function saveLS(data) {
     try {
       localStorage.setItem(LSK, JSON.stringify(data));
     } catch {}
   }
 
-  // API GET renuncias (si tienes) - si no, null
+  // FUNCIONES PARA CONSUMIR API (GET renuncias y empleados)
+
+  // Obtener renuncias desde API (si apiUrl configurada)
   async function apiGet() {
     if (!state.apiUrl) return null;
     try {
       const r = await fetch(state.apiUrl);
       if (!r.ok) throw new Error("GET " + r.status);
       const data = await r.json();
-      return data.data || data;
+      return data.data || data; // Retorna array de renuncias
     } catch {
       return null;
     }
   }
 
-  // API GET empleados
+  // Obtener empleados desde localStorage (simulando API)
   function apiGetEmpleados() {
     try {
       const ls = JSON.parse(localStorage.getItem("empleados_data_v1") || "[]");
@@ -51,18 +58,17 @@
     }
   }
 
+  // FUNCIONES SIMULADAS POST, PATCH, DELETE (localStorage)
 
-
-
-  // POST PATCH DELETE simulados en localStorage
-
+  // Agregar nueva renuncia
   async function apiPost(obj) {
-    obj.id = Date.now().toString();
-    state.renuncias.unshift(obj);
-    saveLS(state.renuncias);
+    obj.id = Date.now().toString(); // Generar ID único con timestamp
+    state.renuncias.unshift(obj);   // Agregar al inicio del array
+    saveLS(state.renuncias);        // Guardar en localStorage
     return obj;
   }
 
+  // Editar renuncia existente por ID
   async function apiPatch(id, patch) {
     const idx = state.renuncias.findIndex(r => r.id == id);
     if (idx === -1) throw new Error("Renuncia no encontrada");
@@ -71,12 +77,15 @@
     return state.renuncias[idx];
   }
 
+  // Eliminar renuncia por ID
   async function apiDelete(id) {
     state.renuncias = state.renuncias.filter(r => r.id !== id);
     saveLS(state.renuncias);
   }
 
-  // Render tabla paginada
+  // RENDERIZADO DE TABLA CON PAGINACIÓN
+
+  // Genera el HTML de la tabla para la página actual
   function renderTable(pageRows) {
     if (!pageRows.length) return `<p>No hay renuncias para mostrar.</p>`;
 
@@ -91,7 +100,7 @@
           ${pageRows.map(r => `
             <tr data-id="${r.id}">
               <td>${r.id}</td>
-              <td>${empleadoNombre(r.employee_id)}</td>
+              <td>${empleadoNombre(r.employee_id)}</td> <!-- Mostrar nombre del empleado -->
               <td>${r.fecha || ""}</td>
               <td>${r.razon || ""}</td>
               <td>
@@ -105,13 +114,13 @@
     `;
   }
 
-  // Obtener nombre del empleado dado su ID
+  // Obtener nombre del empleado dado su ID (busca en state.empleados)
   function empleadoNombre(id) {
     const emp = state.empleados.find(e => e.id == id);
     return emp ? emp.employee_name || emp.name || "Desconocido" : "Desconocido";
   }
 
-  // Paginación simple
+  // Generar HTML para controles de paginación y botón de agregar
   function paginationHTML(total, page, limit) {
     const totalPages = Math.max(1, Math.ceil(total / limit));
     return `
@@ -128,12 +137,14 @@
     `;
   }
 
+  // Obtener subconjunto de filas para la página actual (paginación)
   function slicePage(rows, page, limit) {
     const start = (page - 1) * limit;
     return rows.slice(start, start + limit);
   }
 
-  // Modal agregar/editar renuncia
+  // MODAL para agregar/editar renuncia
+
   function openModal(data, onSave) {
     const overlay = document.createElement("div");
     overlay.className = "modal-overlay";
@@ -157,7 +168,6 @@
                 : `<option disabled>No hay empleados cargados</option>`
               }
             </select>
-
           </div>
           <div class="field">
             <label>Fecha</label>
@@ -176,14 +186,17 @@
     `;
     document.body.appendChild(overlay);
 
+    // Cerrar modal
     const close = () => overlay.remove();
     overlay.querySelector("#m-close").addEventListener("click", close);
     overlay.querySelector("#m-cancel").addEventListener("click", close);
 
+    // Guardar datos al hacer clic en guardar
     overlay.querySelector("#m-save").addEventListener("click", async () => {
       const employee_id = overlay.querySelector("#m-employee").value;
       const fecha = overlay.querySelector("#m-fecha").value.trim();
       const razon = overlay.querySelector("#m-razon").value.trim();
+
       if (!employee_id || !fecha || !razon) {
         alert("Completa todos los campos");
         return;
@@ -193,6 +206,9 @@
     });
   }
 
+  // FUNCIONES PRINCIPALES DE RENDERIZADO
+
+  // Renderizar la vista completa: tabla + paginación + botones + eventos
   async function draw() {
     const total = state.renuncias.length;
     const pageRows = slicePage(state.renuncias, state.page, state.limit);
@@ -205,17 +221,20 @@
       ${pagHtml}
     `;
 
+    // Calcular total páginas para paginación
     const totalPages = Math.max(1, Math.ceil(total / state.limit));
     const go = (p) => {
       state.page = Math.min(Math.max(1, p), totalPages);
       draw();
     };
 
+    // Eventos botones paginación
     state.container.querySelector("#pag-first")?.addEventListener("click", () => go(1));
     state.container.querySelector("#pag-prev")?.addEventListener("click", () => go(state.page - 1));
     state.container.querySelector("#pag-next")?.addEventListener("click", () => go(state.page + 1));
     state.container.querySelector("#pag-last")?.addEventListener("click", () => go(totalPages));
 
+    // Evento botón agregar renuncia
     state.container.querySelector("#btn-add")?.addEventListener("click", () => {
       openModal(null, async (newRen) => {
         await apiPost(newRen);
@@ -224,6 +243,7 @@
       });
     });
 
+    // Eventos botones editar (abrir modal con datos)
     state.container.querySelectorAll("button.edit").forEach(btn => {
       btn.addEventListener("click", (e) => {
         const tr = e.currentTarget.closest("tr");
@@ -237,6 +257,7 @@
       });
     });
 
+    // Eventos botones eliminar (con confirmación)
     state.container.querySelectorAll("button.delete").forEach(btn => {
       btn.addEventListener("click", async (e) => {
         const tr = e.currentTarget.closest("tr");
@@ -249,13 +270,13 @@
     });
   }
 
+  // Carga inicial de datos (empleados y renuncias)
   async function loadData() {
-    // Cargar empleados para mostrar nombres y select
+    // Cargar empleados desde localStorage para mostrar nombres y llenar select
     state.empleados = await apiGetEmpleados();
     console.log("Empleados cargados en estado:", state.empleados);
 
-
-    // Cargar renuncias desde API o LS
+    // Intentar cargar renuncias desde API si existe apiUrl configurada
     if (state.apiUrl) {
       const apiData = await apiGet();
       if (apiData && apiData.length) {
@@ -265,15 +286,19 @@
       }
     }
 
+    // Si no hay API, cargar desde localStorage
     const ls = loadLS();
     if (ls.length) {
       state.renuncias = ls;
       return ls;
     }
+
+    // Si no hay datos previos, inicializar con array vacío
     state.renuncias = [];
     return [];
   }
 
+  // Función pública para renderizar el módulo en un contenedor dado
   async function render(container, opts = {}) {
     state.container = container;
     state.limit = typeof opts.limit === "number" && opts.limit > 0 ? opts.limit : 10;
@@ -284,5 +309,6 @@
     await draw();
   }
 
+  // Exponer función render para uso externo
   window.RenunciasRender = render;
 })();

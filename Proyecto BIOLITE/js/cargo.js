@@ -1,9 +1,10 @@
 // cargo.js
 (() => {
+  // Clave para almacenar datos en LocalStorage
   const STORAGE_KEY = "mis_cargos_localstorage";
   let cargos = [];
 
-  // Referencias a DOM
+  // Referencias a elementos del DOM (se asignan en render)
   let container;
   let modal;
   let modalTitle;
@@ -12,26 +13,33 @@
   let inputDescripcion;
   let btnGuardar;
   let btnCerrar;
-  let idEditando = null;
+  let idEditando = null; // Guarda el ID del cargo que se está editando
 
-  // Cargar datos desde localStorage
+  /**
+   * Cargar datos desde LocalStorage
+   */
   function cargarLocal() {
     const datos = localStorage.getItem(STORAGE_KEY);
     cargos = datos ? JSON.parse(datos) : [];
   }
 
-  // Guardar datos en localStorage
+  /**
+   * Guardar datos en LocalStorage
+   */
   function guardarLocal() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cargos));
   }
 
-  // Cargar datos desde API (modifica URL aquí)
+  /**
+   * Cargar datos desde una API externa (simulada)
+   * @returns {Promise<Array>} Lista de cargos
+   */
   async function cargarDesdeAPI() {
     try {
       const res = await fetch("https://api.example.com/cargos");
       if (!res.ok) throw new Error("Error cargando datos API");
       const data = await res.json();
-      // Esperamos array con {id, nombre, descripcion}
+      // Esperamos un array con objetos {id, nombre, descripcion}
       return data;
     } catch (error) {
       console.error("Error al cargar desde API:", error);
@@ -39,7 +47,11 @@
     }
   }
 
-  // Abrir modal para agregar o editar
+  /**
+   * Abrir el modal para agregar o editar un cargo
+   * @param {boolean} editar - Indica si es edición o creación
+   * @param {Object|null} cargo - Datos del cargo a editar
+   */
   function abrirModal(editar = false, cargo = null) {
     modal.style.display = "block";
     if (editar) {
@@ -55,25 +67,32 @@
     }
   }
 
-  // Cerrar modal
+  /**
+   * Cerrar modal y reiniciar formulario
+   */
   function cerrarModal() {
     modal.style.display = "none";
     form.reset();
     idEditando = null;
   }
 
-  // Validar formulario simple
+  /**
+   * Validar formulario antes de guardar
+   * @returns {boolean} - true si es válido, false si no
+   */
   function validarFormulario() {
     if (!inputNombre.value.trim()) {
       alert("El nombre es obligatorio");
       inputNombre.focus();
       return false;
     }
-    // Puedes agregar más validaciones aquí si quieres
+    // Aquí podrían agregarse más validaciones
     return true;
   }
 
-  // Guardar cargo (nuevo o editado)
+  /**
+   * Guardar cargo (nuevo o editado) en la lista y en LocalStorage
+   */
   function guardarCargo(e) {
     e.preventDefault();
     if (!validarFormulario()) return;
@@ -82,15 +101,14 @@
     const descripcion = inputDescripcion.value.trim();
 
     if (idEditando) {
-      // Editar
+      // Editar cargo existente
       const idx = cargos.findIndex(c => c.id === idEditando);
       if (idx !== -1) {
         cargos[idx].nombre = nombre;
         cargos[idx].descripcion = descripcion;
       }
     } else {
-      // Nuevo cargo
-      // Crear ID único simple (puedes mejorar esto)
+      // Crear un nuevo cargo con ID único
       const nuevoId = Date.now().toString();
       cargos.push({ id: nuevoId, nombre, descripcion });
     }
@@ -99,7 +117,10 @@
     render(container);
   }
 
-  // Eliminar cargo
+  /**
+   * Eliminar cargo por ID
+   * @param {string} id - ID del cargo a eliminar
+   */
   function eliminarCargo(id) {
     if (!confirm("¿Seguro que deseas eliminar este cargo?")) return;
     cargos = cargos.filter(c => c.id !== id);
@@ -107,23 +128,27 @@
     render(container);
   }
 
-  // Renderizar tabla y UI
+  /**
+   * Renderizar la interfaz de gestión de cargos
+   * @param {HTMLElement} contenedor - Elemento donde se mostrará la tabla
+   * @param {Object} opts - Opciones adicionales (opcional)
+   */
   async function render(contenedor, opts = {}) {
     container = contenedor;
 
     cargarLocal();
 
-    // Cargar datos API y combinar
+    // Cargar datos desde API y combinarlos con los locales
     const apiCargos = await cargarDesdeAPI();
     const idsLocales = new Set(cargos.map(c => c.id));
     apiCargos.forEach(c => {
       if (!idsLocales.has(c.id)) cargos.push(c);
     });
 
-    // Guardar combinado para que se mantenga en localStorage
+    // Guardar la combinación final en LocalStorage
     guardarLocal();
 
-    // HTML tabla
+    // HTML de la tabla y el modal
     let html = `
       <div style="margin-bottom:1rem; display:flex; justify-content: space-between; align-items:center;">
         <h2>Cargos</h2>
@@ -153,7 +178,7 @@
         </tbody>
       </table>
 
-      <!-- Modal -->
+      <!-- Modal para agregar/editar cargos -->
       <div id="modalCargo" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.4); z-index:1000; overflow:auto;">
         <div class="modal-content" style="background:#fff; margin:5% auto; padding:1.5rem; border-radius:8px; max-width:480px; position:relative;">
           <span id="cerrarModal" class="close" style="position:absolute; top:8px; right:14px; font-size:28px; font-weight:bold; cursor:pointer;">&times;</span>
@@ -173,7 +198,7 @@
 
     container.innerHTML = html;
 
-    // Referencias modal y formulario
+    // Asignación de referencias de modal y formulario
     modal = document.getElementById("modalCargo");
     modalTitle = document.getElementById("modalTitulo");
     form = document.getElementById("formCargo");
@@ -182,10 +207,10 @@
     btnGuardar = form.querySelector('button[type="submit"]');
     btnCerrar = document.getElementById("cerrarModal");
 
-    // Event listeners
+    // Eventos
     document.getElementById("btnAgregar").addEventListener("click", () => abrirModal(false));
 
-    // Delegación para botones editar y eliminar
+    // Botones de edición
     container.querySelectorAll(".btn-accion.editar").forEach(btn => {
       btn.addEventListener("click", e => {
         const id = e.currentTarget.dataset.id;
@@ -193,6 +218,8 @@
         if (cargo) abrirModal(true, cargo);
       });
     });
+
+    // Botones de eliminación
     container.querySelectorAll(".btn-accion.eliminar").forEach(btn => {
       btn.addEventListener("click", e => {
         const id = e.currentTarget.dataset.id;
@@ -200,13 +227,16 @@
       });
     });
 
+    // Cerrar modal
     btnCerrar.addEventListener("click", cerrarModal);
     window.addEventListener("click", e => {
       if (e.target === modal) cerrarModal();
     });
+
+    // Guardar cargo al enviar formulario
     form.addEventListener("submit", guardarCargo);
   }
 
-  // Exponer función de renderizado para que app.js la use
+  // Exponer función de renderizado para que app.js la invoque
   window.CargosRender = render;
 })();

@@ -1,17 +1,24 @@
 // empleados.js
+// Módulo para la gestión de empleados en el sistema, incluyendo CRUD básico
+// con persistencia en localStorage y soporte opcional para carga desde una API.
 
 (function () {
+  // Clave usada en LocalStorage para guardar datos de empleados
   const LSK = "empleados_data_v1";
 
+  // Estado interno del módulo
   const state = {
-    container: null,
-    rows: [],
-    page: 1,
-    limit: 10,
-    apiUrl: null,
-    dataLoaded: false,
+    container: null,    // Elemento HTML donde se renderiza el módulo
+    rows: [],           // Lista de empleados cargados
+    page: 1,            // Página actual de la tabla
+    limit: 10,          // Cantidad de registros por página
+    apiUrl: null,       // URL de la API opcional para cargar datos iniciales
+    dataLoaded: false,  // Bandera que indica si los datos ya fueron cargados
   };
 
+  // --- Funciones de almacenamiento local ---
+
+  // Carga datos desde localStorage
   function loadLS() {
     try {
       return JSON.parse(localStorage.getItem(LSK) || "[]");
@@ -20,31 +27,38 @@
     }
   }
 
+  // Guarda datos en localStorage
   function saveLS(rows) {
     try {
       localStorage.setItem(LSK, JSON.stringify(rows));
     } catch {}
   }
 
+  // --- Funciones API (falsas o reales) ---
+
+  // Obtiene datos desde la API (si se configuró apiUrl)
   async function apiGet() {
     if (!state.apiUrl) return [];
     try {
       const r = await fetch(state.apiUrl);
       if (!r.ok) throw new Error("GET " + r.status);
       const data = await r.json();
+      // Retorna array de empleados, adaptándose al formato de la respuesta
       return Array.isArray(data.data) ? data.data : data;
     } catch {
       return [];
     }
   }
 
+  // Crea un nuevo empleado (modo local)
   async function apiPost(obj) {
-    obj.id = Date.now().toString();
-    state.rows.unshift(obj);
+    obj.id = Date.now().toString(); // ID único basado en timestamp
+    state.rows.unshift(obj);        // Agrega al inicio
     saveLS(state.rows);
     return obj;
   }
 
+  // Edita datos de un empleado por ID
   async function apiPatch(id, patch) {
     const idx = state.rows.findIndex(r => r.id == id);
     if (idx === -1) throw new Error("Empleado no encontrado");
@@ -53,6 +67,9 @@
     return state.rows[idx];
   }
 
+  // --- Renderizado de UI ---
+
+  // Genera la tabla de empleados
   function renderTable(pageRows) {
     if (!pageRows.length) return `<p>No hay empleados para mostrar.</p>`;
     return `
@@ -80,6 +97,7 @@
     `;
   }
 
+  // Genera la barra de paginación
   function paginationHTML(total, page, limit) {
     const totalPages = Math.max(1, Math.ceil(total / limit));
     return `
@@ -96,11 +114,13 @@
     `;
   }
 
+  // Extrae el subconjunto de empleados de la página actual
   function slicePage(rows, page, limit) {
     const start = (page - 1) * limit;
     return rows.slice(start, start + limit);
   }
 
+  // Abre el modal para crear o editar un empleado
   function openModal(data, onSave) {
     const overlay = document.createElement("div");
     overlay.className = "modal-overlay";
@@ -132,10 +152,12 @@
     `;
     document.body.appendChild(overlay);
 
+    // Función para cerrar modal
     const close = () => overlay.remove();
     overlay.querySelector("#m-close").addEventListener("click", close);
     overlay.querySelector("#m-cancel").addEventListener("click", close);
 
+    // Guardar cambios al presionar "Guardar"
     overlay.querySelector("#m-save").addEventListener("click", async () => {
       const employee_name = overlay.querySelector("#m-name").value.trim();
       const employee_salary = overlay.querySelector("#m-salary").value.trim();
@@ -149,6 +171,7 @@
     });
   }
 
+  // Renderiza toda la interfaz (tabla + paginación + eventos)
   async function draw() {
     const total = state.rows.length;
     const pageRows = slicePage(state.rows, state.page, state.limit);
@@ -167,11 +190,13 @@
       draw();
     };
 
+    // Eventos de paginación
     state.container.querySelector("#pag-first")?.addEventListener("click", () => go(1));
     state.container.querySelector("#pag-prev")?.addEventListener("click", () => go(state.page - 1));
     state.container.querySelector("#pag-next")?.addEventListener("click", () => go(state.page + 1));
     state.container.querySelector("#pag-last")?.addEventListener("click", () => go(totalPages));
 
+    // Botón de agregar empleado
     state.container.querySelector("#btn-add")?.addEventListener("click", () => {
       openModal(null, async (newEmp) => {
         await apiPost(newEmp);
@@ -180,6 +205,7 @@
       });
     });
 
+    // Eventos de edición
     state.container.querySelectorAll("button.edit").forEach(btn => {
       btn.addEventListener("click", (e) => {
         const tr = e.currentTarget.closest("tr");
@@ -193,6 +219,7 @@
       });
     });
 
+    // Eventos de eliminación
     state.container.querySelectorAll("button.delete").forEach(btn => {
       btn.addEventListener("click", (e) => {
         const tr = e.currentTarget.closest("tr");
@@ -206,10 +233,12 @@
     });
   }
 
+  // Carga inicial de datos desde API y/o LocalStorage
   async function loadData() {
     const apiData = await apiGet();
     const stored = loadLS();
 
+    // Combinar datos, evitando duplicados por ID
     const combined = [
       ...apiData.filter(apiEmp => !stored.some(localEmp => localEmp.id === apiEmp.id)),
       ...stored
@@ -220,7 +249,7 @@
     state.dataLoaded = true;
   }
 
-  // Función para esperar que los datos estén cargados (para otros módulos)
+  // Permite a otros módulos esperar hasta que los datos estén listos
   async function waitForDataLoaded(maxRetries = 15, delay = 200) {
     for (let i = 0; i < maxRetries; i++) {
       if (state.dataLoaded && state.rows.length > 0) {
@@ -228,9 +257,10 @@
       }
       await new Promise(res => setTimeout(res, delay));
     }
-    return []; // si no se cargan, retornar vacío
+    return []; // Si no se cargan, retornar vacío
   }
 
+  // Punto de entrada para renderizar el módulo
   async function render(container, opts = {}) {
     state.container = container;
     state.limit = typeof opts.limit === "number" && opts.limit > 0 ? opts.limit : 10;
@@ -241,11 +271,11 @@
     await draw();
   }
 
+  // API pública del módulo
   window.Empleados = {
     render,
     getData: () => state.rows,
     waitForDataLoaded,
   };
-
 
 })();

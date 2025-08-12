@@ -1,24 +1,48 @@
+// turnoGestion.js
+
 window.TurnoGestion = {
+  // Estado global del módulo
   state: {
-    turnos: [],  // { id, nombre, dias, entradaNormal, salidaNormal, turnoFinSemana: {nombre, entrada, salida}, aplicarFestivos }
-    modal: { visible: false, modo: '', turnoEdit: null, modalFSVisible: false },
+    turnos: [],  // Array de objetos turno: { id, nombre, dias, entradaNormal, salidaNormal, turnoFinSemana: {nombre, entrada, salida}, aplicarFestivos }
+    modal: {     // Estado del modal actual
+      visible: false,      // Si el modal está visible o no
+      modo: '',            // Modo del modal: 'nuevo' o 'editar'
+      turnoEdit: null,     // Turno que se está editando (objeto) o null para nuevo
+      modalFSVisible: false, // Si está visible el modal específico de fines de semana
+    },
   },
 
+  /**
+   * Carga la lista de turnos desde localStorage.
+   * Si no hay datos, inicializa con arreglo vacío.
+   */
   loadTurnos() {
     const data = localStorage.getItem('turnosGestion');
     this.state.turnos = data ? JSON.parse(data) : [];
   },
 
+  /**
+   * Guarda la lista actual de turnos en localStorage en formato JSON.
+   */
   saveTurnos() {
     localStorage.setItem('turnosGestion', JSON.stringify(this.state.turnos));
   },
 
+  /**
+   * Renderiza la interfaz principal dentro del contenedor dado.
+   * Carga los turnos y muestra la tabla con los turnos.
+   * @param {HTMLElement} container Contenedor donde se monta la UI
+   */
   render(container) {
     this.container = container;
     this.loadTurnos();
     this.renderUI();
   },
 
+  /**
+   * Construye y muestra la tabla de gestión de turnos
+   * Añade eventos a botones de crear, editar y eliminar.
+   */
   renderUI() {
     const html = `
       <div class="turnos-gestion-container">
@@ -63,12 +87,15 @@ window.TurnoGestion = {
       </div>
     `;
 
+    // Inserta la interfaz en el contenedor principal
     this.container.innerHTML = html;
 
+    // Evento para crear nuevo turno
     this.container.querySelector('#btn-nuevo-turno').addEventListener('click', () => {
       this.openModal('nuevo');
     });
 
+    // Eventos para botones editar
     this.container.querySelectorAll('.btn-editar').forEach(btn => {
       btn.addEventListener('click', e => {
         const id = e.target.closest('tr').dataset.id;
@@ -76,6 +103,7 @@ window.TurnoGestion = {
       });
     });
 
+    // Eventos para botones eliminar
     this.container.querySelectorAll('.btn-eliminar').forEach(btn => {
       btn.addEventListener('click', e => {
         const id = e.target.closest('tr').dataset.id;
@@ -84,14 +112,21 @@ window.TurnoGestion = {
     });
   },
 
+  /**
+   * Abre el modal principal para crear o editar turno.
+   * Si es edición, carga los datos del turno correspondiente.
+   * @param {'nuevo'|'editar'} modo 
+   * @param {string|null} id ID del turno para editar, null si nuevo
+   */
   openModal(modo, id = null) {
     this.state.modal.visible = true;
     this.state.modal.modo = modo;
-    this.state.modal.modalFSVisible = false; // ocultar modal fin de semana al abrir modal principal
+    this.state.modal.modalFSVisible = false; // Siempre ocultar modal fin de semana al abrir el principal
 
     if (modo === 'editar') {
       this.state.modal.turnoEdit = this.state.turnos.find(t => t.id === id);
     } else {
+      // Inicializa nuevo turno con valores por defecto
       this.state.modal.turnoEdit = {
         nombre: '',
         dias: [],
@@ -105,25 +140,37 @@ window.TurnoGestion = {
     this.renderModal();
   },
 
+  /**
+   * Abre el modal específico para editar el turno de fines de semana.
+   */
   openModalFinSemana() {
     this.state.modal.modalFSVisible = true;
     this.renderModal();
   },
 
+  /**
+   * Cierra el modal de fines de semana y vuelve al modal principal.
+   */
   closeModalFinSemana() {
     this.state.modal.modalFSVisible = false;
     this.renderModal();
   },
 
+  /**
+   * Renderiza el contenido del modal según el estado actual (principal o fines de semana).
+   * Maneja creación, edición y edición de turno fines de semana.
+   */
   renderModal() {
     const modalContainer = this.container.querySelector('#modal-container');
+
+    // Si modal no visible, limpia contenido y retorna
     if (!this.state.modal.visible) {
       modalContainer.innerHTML = '';
       return;
     }
 
+    // Modal fines de semana
     if (this.state.modal.modalFSVisible) {
-      // Modal fines de semana
       const tFS = this.state.modal.turnoEdit?.turnoFinSemana || { nombre: '', entrada: '08:00', salida: '17:00' };
 
       modalContainer.innerHTML = `
@@ -155,6 +202,7 @@ window.TurnoGestion = {
         </div>
       `;
 
+      // Eventos del modal fines de semana
       modalContainer.querySelector('#modal-close-fs').addEventListener('click', () => this.closeModalFinSemana());
       modalContainer.querySelector('#btn-cancelar-fs').addEventListener('click', () => this.closeModalFinSemana());
 
@@ -163,6 +211,7 @@ window.TurnoGestion = {
         const entradaFS = modalContainer.querySelector('#input-entrada-fin-semana').value;
         const salidaFS = modalContainer.querySelector('#input-salida-fin-semana').value;
 
+        // Validación básica
         if (!nombreFS) {
           alert('El nombre del turno para fines de semana es obligatorio.');
           return;
@@ -172,15 +221,15 @@ window.TurnoGestion = {
           return;
         }
 
-        // Guardar temporal en turnoEdit
+        // Guarda datos temporales en turnoEdit
         this.state.modal.turnoEdit.turnoFinSemana = { nombre: nombreFS, entrada: entradaFS, salida: salidaFS };
 
-        // Volver modal principal
+        // Vuelve al modal principal
         this.closeModalFinSemana();
       });
 
     } else {
-      // Modal principal
+      // Modal principal para nuevo o editar turno
       const t = this.state.modal.turnoEdit || {
         nombre: '',
         dias: [],
@@ -241,7 +290,7 @@ window.TurnoGestion = {
         </div>
       `;
 
-      // Selector días con drag
+      // Configura eventos para selección múltiple de días con drag y click
       const daysSelector = modalContainer.querySelector('#days-selector');
       let isDragging = false;
       let dragSelecting = null;
@@ -269,6 +318,7 @@ window.TurnoGestion = {
         });
       });
 
+      // Finaliza drag al soltar mouse en cualquier parte
       window.addEventListener('mouseup', () => {
         isDragging = false;
         dragSelecting = null;
@@ -279,30 +329,35 @@ window.TurnoGestion = {
       modalContainer.querySelector('#btn-cancelar').addEventListener('click', () => this.closeModal());
       modalContainer.querySelector('#btn-guardar').addEventListener('click', () => this.guardarTurno());
 
-      // Botón abrir modal fin de semana
+      // Botón para abrir modal de fin de semana
       modalContainer.querySelector('#btn-add-fin-semana').addEventListener('click', () => {
         this.openModalFinSemana();
       });
     }
   },
 
+  /**
+   * Guarda los datos del turno desde el modal principal.
+   * Valida campos, crea o edita el turno en el estado y actualiza localStorage.
+   */
   guardarTurno() {
     const nombre = this.container.querySelector('#input-nombre').value.trim();
 
-    // Días seleccionados
+    // Obtiene días seleccionados
     const dias = Array.from(this.container.querySelectorAll('.day-btn.selected'))
       .map(el => el.dataset.day);
 
     const entradaNormal = this.container.querySelector('#input-entrada-normal').value;
     const salidaNormal = this.container.querySelector('#input-salida-normal').value;
 
-    // Turno fines de semana (opcional)
+    // Datos turno fines de semana
     const nombreFS = this.state.modal.turnoEdit.turnoFinSemana?.nombre || '';
     const entradaFS = this.state.modal.turnoEdit.turnoFinSemana?.entrada || '';
     const salidaFS = this.state.modal.turnoEdit.turnoFinSemana?.salida || '';
 
     const aplicarFestivos = this.container.querySelector('#input-horario-festivo').checked;
 
+    // Validaciones básicas
     if (!nombre) {
       alert('El nombre del turno es obligatorio.');
       return;
@@ -322,6 +377,7 @@ window.TurnoGestion = {
     }
 
     if (this.state.modal.modo === 'nuevo') {
+      // Crear nuevo turno con ID único
       const nuevoTurno = {
         id: Date.now().toString(),
         nombre,
@@ -333,6 +389,7 @@ window.TurnoGestion = {
       };
       this.state.turnos.push(nuevoTurno);
     } else if (this.state.modal.modo === 'editar' && this.state.modal.turnoEdit) {
+      // Editar turno existente
       const turno = this.state.modal.turnoEdit;
       turno.nombre = nombre;
       turno.dias = dias;
@@ -347,6 +404,9 @@ window.TurnoGestion = {
     this.renderUI();
   },
 
+  /**
+   * Cierra cualquier modal abierto y limpia el estado modal.
+   */
   closeModal() {
     this.state.modal.visible = false;
     this.state.modal.turnoEdit = null;
@@ -354,6 +414,11 @@ window.TurnoGestion = {
     this.renderModal();
   },
 
+  /**
+   * Elimina un turno por ID tras confirmar con el usuario.
+   * Actualiza estado y localStorage, luego refresca UI.
+   * @param {string} id ID del turno a eliminar
+   */
   eliminarTurno(id) {
     if (!confirm('¿Estás seguro de eliminar este turno?')) return;
     this.state.turnos = this.state.turnos.filter(t => t.id !== id);

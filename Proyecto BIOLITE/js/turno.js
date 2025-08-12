@@ -1,15 +1,27 @@
 window.Turnos = {
+    // Estado global del módulo
     state: {
-        empleados: [],
-        empleadosOriginal: [],
-        turnos: {},
-        modal: { visible: false, tipo: '', idEmpleado: null, dia: null },
-        gestionTurnos: [], // turnos creados en módulo Gestión de Turnos
+        empleados: [],          // Lista filtrada de empleados para mostrar
+        empleadosOriginal: [],  // Lista original completa de empleados
+        turnos: {},             // Horarios asignados a cada empleado, organizados por día
+        modal: {                // Estado del modal activo
+            visible: false,     // Si el modal está visible o no
+            tipo: '',           // Tipo de modal ('patron' o 'horario')
+            idEmpleado: null,   // ID empleado para el modal
+            dia: null           // Día específico para el modal horario
+        },
+        gestionTurnos: [],      // Turnos creados en módulo externo (patrones)
     },
 
+    // Abreviaturas para días y meses usados en la tabla
     diasSemana: ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"],
     meses: ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"],
 
+    /**
+     * Carga empleados desde API externa (limita a 10)
+     * Inicializa turnos desde localStorage y aplica inicialización a empleados sin turno
+     * Carga también los turnos gestionados guardados
+     */
     fetchEmpleados: async function () {
         try {
             const res = await fetch("https://fakerapi.it/api/v1/users?_locale=es");
@@ -19,14 +31,14 @@ window.Turnos = {
             this.state.empleados = [...this.state.empleadosOriginal];
             this.cargarTurnosDesdeLocalStorage();
 
-            // Inicializar turnos para empleados que no tengan asignación
+            // Inicializa turnos para empleados sin asignación previa
             this.state.empleados.forEach(empleado => {
                 if (!this.state.turnos[empleado.id]) {
                     this.inicializarTurnos(empleado.id);
                 }
             });
 
-            // Carga turnos gestionados
+            // Carga turnos gestionados desde localStorage
             this.cargarTurnosGestion();
         } catch (error) {
             console.error(error);
@@ -34,6 +46,10 @@ window.Turnos = {
         }
     },
 
+    /**
+     * Carga la lista de turnos gestionados desde localStorage
+     * o inicializa arreglo vacío si no existe o hay error
+     */
     cargarTurnosGestion: function () {
         const turnosStr = localStorage.getItem("turnosGestion");
         if (turnosStr) {
@@ -47,6 +63,11 @@ window.Turnos = {
         }
     },
 
+    /**
+     * Inicializa turnos vacíos para un empleado
+     * Cada día queda marcado como libre y sin horas
+     * @param {string|number} idEmpleado 
+     */
     inicializarTurnos: function (idEmpleado) {
         if (this.state.turnos[idEmpleado]) return;
         this.state.turnos[idEmpleado] = this.diasSemana.reduce((acc, dia) => {
@@ -55,10 +76,17 @@ window.Turnos = {
         }, {});
     },
 
+    /**
+     * Guarda el objeto turnos en localStorage como JSON string
+     */
     guardarTurnosEnLocalStorage: function() {
         localStorage.setItem("turnos_empleados", JSON.stringify(this.state.turnos));
     },
 
+    /**
+     * Carga turnos desde localStorage y actualiza state.turnos
+     * En caso de error, inicializa como objeto vacío
+     */
     cargarTurnosDesdeLocalStorage: function() {
         const datos = localStorage.getItem("turnos_empleados");
         if (datos) {
@@ -70,12 +98,19 @@ window.Turnos = {
         }
     },
 
+    /**
+     * Renderiza la tabla principal de turnos en el contenedor 'calendar-app'
+     * Muestra empleados con sus horarios por día y botones para asignar patrón o editar horario
+     */
     renderCalendarTable: function () {
         const appContainer = document.getElementById("calendar-app");
         if (!appContainer) return;
 
+        // Fecha inicio de la semana (lunes)
         const today = new Date();
         const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + 1));
+
+        // Construye arreglo con día abreviado, fecha y mes para encabezado
         const currentWeekDays = this.diasSemana.map((d, i) => {
             const day = new Date(startOfWeek);
             day.setDate(startOfWeek.getDate() + i);
@@ -86,6 +121,7 @@ window.Turnos = {
             };
         });
 
+        // HTML del encabezado de tabla
         const headerHtml = `
             <thead>
                 <tr>
@@ -99,12 +135,17 @@ window.Turnos = {
             </thead>
         `;
 
+        // Construye filas por empleado
         const bodyHtml = this.state.empleados.map(empleado => {
             const { id, firstname, lastname, gender } = empleado;
+
+            // Ejemplo demo de nivel organizacional basado en id y género
             const nivelOrg = (gender === 'male' || gender === 'female') ?
                 (id % 3 === 0 ? 'Gerencia' : (id % 2 === 0 ? 'Ventas' : 'Operaciones')) : 'Recursos Humanos';
+
             const horarioEmpleado = this.state.turnos[id] || {};
 
+            // Celdas por día con botón para editar horario
             const celdasHorario = this.diasSemana.map(dia => {
                 const turno = horarioEmpleado[dia] || { entrada: "-", salida: "-", libre: true };
                 const clase = turno.libre ? 'cell-libre' : 'cell-horario';
@@ -118,6 +159,7 @@ window.Turnos = {
                 `;
             }).join("");
 
+            // Fila completa del empleado
             return `
                 <tr>
                     <td>${id}</td>
@@ -134,6 +176,7 @@ window.Turnos = {
             `;
         }).join("");
 
+        // Inserta tabla completa en el contenedor
         appContainer.innerHTML = `
             <table class="calendar-table">
                 ${headerHtml}
@@ -142,16 +185,31 @@ window.Turnos = {
         `;
     },
 
+    /**
+     * Abre modal para asignar patrón o editar horario
+     * Guarda el estado modal en `state.modal` y llama a renderizar modal
+     * @param {string} tipo 'patron' o 'horario'
+     * @param {string|number} idEmpleado 
+     * @param {string|null} dia Día abreviado, solo para tipo 'horario'
+     */
     openModal: function (tipo, idEmpleado, dia = null) {
         this.state.modal = { visible: true, tipo, idEmpleado, dia };
         this.renderModal();
     },
 
+    /**
+     * Cierra modal, limpia estado y vuelve a renderizar modal (vacío)
+     */
     closeModal: function () {
         this.state.modal = { visible: false, tipo: '', idEmpleado: null, dia: null };
         this.renderModal();
     },
 
+    /**
+     * Renderiza el contenido del modal según tipo actual
+     * Modal 'patron': selector de turno gestionado para asignar
+     * Modal 'horario': inputs para editar entrada, salida y marcar día libre
+     */
     renderModal: function () {
         const patronModalContainer = document.getElementById('patron-modal-container');
         const horarioModalContainer = document.getElementById('horario-modal-container');
@@ -163,12 +221,14 @@ window.Turnos = {
         if (this.state.modal.tipo === 'patron') {
             const { idEmpleado } = this.state.modal;
 
+            // Opciones para turnos gestionados o mensaje si no hay ninguno
             const opcionesTurnos = this.state.gestionTurnos.length
                 ? this.state.gestionTurnos.map((turno, index) => {
                     return `<option value="${index}">${turno.nombre || `Turno ${index + 1}`}</option>`;
                 }).join('')
                 : `<option disabled>No hay turnos creados</option>`;
 
+            // Modal HTML para patrón
             patronModalContainer.innerHTML = `
                 <div class="modal-backdrop" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 9999;">
                     <div id="patron-modal" class="modal" 
@@ -207,6 +267,8 @@ window.Turnos = {
         } else if (this.state.modal.tipo === 'horario') {
             const { idEmpleado, dia } = this.state.modal;
             const turnoActual = this.state.turnos[idEmpleado][dia];
+
+            // Modal HTML para editar horario de día específico
             horarioModalContainer.innerHTML = `
                 <div class="modal-backdrop" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 9999;">
                     <div id="horario-modal" class="modal" 
@@ -244,7 +306,7 @@ window.Turnos = {
                 </div>
             `;
 
-            // Funcionalidad para deshabilitar inputs si Día libre
+            // Habilita o deshabilita inputs según checkbox "Día libre"
             setTimeout(() => {
                 const checkboxLibre = document.getElementById('checkbox-libre');
                 const inputEntrada = document.getElementById('input-entrada');
@@ -263,6 +325,11 @@ window.Turnos = {
         }
     },
 
+    /**
+     * Aplica el patrón de turno gestionado seleccionado a un empleado
+     * Mapea días del patrón a los días abreviados y asigna horarios o días libres
+     * @param {string|number} idEmpleado 
+     */
     applyPatronGestion: function (idEmpleado) {
         const select = document.getElementById('select-gestion-turno');
         if (!select) return alert("Seleccione un turno válido.");
@@ -272,7 +339,7 @@ window.Turnos = {
 
         const nuevoTurno = {};
 
-        // Mapeo de abreviaturas a días completos
+        // Mapa abreviaturas a nombres completos para verificar asignaciones
         const mapDias = {
             'LUN': 'Lunes',
             'MAR': 'Martes',
@@ -283,19 +350,18 @@ window.Turnos = {
             'DOM': 'Domingo'
         };
 
+        // Por cada día, verifica si está en los días asignados y asigna horarios correspondientes
         this.diasSemana.forEach(diaAbrev => {
             const diaCompleto = mapDias[diaAbrev];
 
-            // Verificamos si el día está dentro de los días asignados al turno
             const estaAsignado = turnoSeleccionado.dias.includes(diaCompleto);
 
             if (!estaAsignado) {
-                // Día no asignado = libre
+                // Día no asignado -> libre
                 nuevoTurno[diaAbrev] = { entrada: "-", salida: "-", libre: true };
             } else {
-                // Día asignado: revisamos si es fin de semana
+                // Día asignado: distingue fin de semana o día normal
                 if (diaCompleto === "Sábado" || diaCompleto === "Domingo") {
-                    // Aplicar turnoFinSemana si existe
                     if (turnoSeleccionado.turnoFinSemana) {
                         nuevoTurno[diaAbrev] = {
                             entrada: turnoSeleccionado.turnoFinSemana.entrada || "-",
@@ -303,7 +369,6 @@ window.Turnos = {
                             libre: false
                         };
                     } else {
-                        // Si no tiene turno fin de semana definido, aplicar horario normal
                         nuevoTurno[diaAbrev] = {
                             entrada: turnoSeleccionado.entradaNormal,
                             salida: turnoSeleccionado.salidaNormal,
@@ -311,7 +376,6 @@ window.Turnos = {
                         };
                     }
                 } else {
-                    // Día normal
                     nuevoTurno[diaAbrev] = {
                         entrada: turnoSeleccionado.entradaNormal,
                         salida: turnoSeleccionado.salidaNormal,
@@ -321,14 +385,19 @@ window.Turnos = {
             }
         });
 
+        // Actualiza el estado y guarda en localStorage
         this.state.turnos[idEmpleado] = nuevoTurno;
-
         this.guardarTurnosEnLocalStorage();
         this.closeModal();
         this.renderCalendarTable();
     },
 
-
+    /**
+     * Guarda horario editado manualmente para empleado y día
+     * Lee inputs de modal, actualiza estado y guarda localStorage
+     * @param {string|number} idEmpleado 
+     * @param {string} dia Día abreviado
+     */
     saveHorario: function (idEmpleado, dia) {
         const checkboxLibre = document.getElementById('checkbox-libre');
         const inputEntrada = document.getElementById('input-entrada');
@@ -351,6 +420,9 @@ window.Turnos = {
         this.renderCalendarTable();
     },
 
+    /**
+     * Configura el input de búsqueda para filtrar empleados por nombre o apellido
+     */
     setupSearch: function () {
         const searchInput = document.getElementById('employee-search');
         if (searchInput) {
@@ -365,12 +437,20 @@ window.Turnos = {
         }
     },
 
+    /**
+     * Método inicial para cargar datos y renderizar
+     */
     init: async function () {
         await this.fetchEmpleados();
         this.renderCalendarTable();
         this.setupSearch();
     },
 
+    /**
+     * Renderiza el HTML base en un contenedor dado y lanza la inicialización
+     * @param {HTMLElement} container Contenedor donde se monta el módulo
+     * @param {object} options Opciones futuras (no usadas aún)
+     */
     render: function (container, options = {}) {
         container.innerHTML = `
             <input type="text" id="employee-search" placeholder="Buscar empleado por nombre o apellido" style="margin-bottom: 1rem; padding: 0.5rem; width: 100%; max-width: 400px;" />

@@ -3,59 +3,88 @@
 // Pasa apiUrl en render(..., { apiUrl: "https://tu.api/solicitudes" }) si quieres backend real.
 
 (function () {
-  const LSK = "solicitudes_data_v1";
+  const LSK = "solicitudes_data_v1"; // Clave para almacenamiento local
 
+  // Estado interno
   const state = {
-    container: null,
-    rows: [],
-    page: 1,
-    limit: 10,
-    apiUrl: null, // GET/POST/PATCH opcional
+    container: null, // Contenedor DOM donde se renderiza
+    rows: [],        // Lista de solicitudes cargadas
+    page: 1,         // Página actual
+    limit: 10,       // Registros por página
+    apiUrl: null,    // URL API (GET/POST/PATCH) opcional
   };
 
-  /* ---------- Utils ---------- */
+  /* ---------- Utilidades ---------- */
+  // Clase CSS para estado (aprobado, denegado, pendiente)
   const cls = (estado) => {
     const e = (estado || "").toLowerCase();
     if (e.startsWith("aprob")) return "approved";
     if (e.includes("no")) return "denied";
     return "pending";
   };
+  // Formatear fecha a formato legible en español (ej. "28 NOV 2024")
   const fmtDate = (d) =>
-    new Date(d).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase().replace(/\./g, "");
+    new Date(d).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })
+      .toUpperCase()
+      .replace(/\./g, "");
+  // Fecha actual formateada
   const nowDate = () => fmtDate(new Date());
+  // Hora actual formateada HH:mm
   const nowTime = () => {
     const n = new Date();
     return `${String(n.getHours()).padStart(2, "0")}:${String(n.getMinutes()).padStart(2, "0")}`;
   };
 
-  /* ---------- Storage ---------- */
+  /* ---------- Storage local ---------- */
+  // Cargar solicitudes desde localStorage
   const loadLS = () => { try { return JSON.parse(localStorage.getItem(LSK) || "[]"); } catch { return []; } };
+  // Guardar solicitudes en localStorage
   const saveLS = (rows) => { try { localStorage.setItem(LSK, JSON.stringify(rows)); } catch {} };
 
-  /* ---------- Seed demo ---------- */
+  /* ---------- Datos demo inicial ---------- */
+  // Datos semilla para demo inicial si no hay datos en localStorage o API
   function seedRows() {
     const base = [
       ["000125", "Christian Garcia", "Sia Latam", "Vacaciones", "No trabajadas (días)", "28 NOV 2024", "02 SEP 2025", "02 OCT 2025", "28 NOV 2024 10:12", "Admin", "Pendiente"],
       ["000151", "Adrian Garcia-Rech", "Sia Latam", "Permiso", "Horas", "03 DIC 2024", "14 ENE 2025", "14 ENE 2025", "03 DIC 2024 09:40", "Cristian Garcia", "Aprobado"],
       ["000205", "Cristian Garcia", "Ventas", "Enfermedad", "Días", "28 NOV 2024", "07 MAR 2025", "08 MAR 2025", "28 NOV 2024 12:20", "RH Supervisor", "No aprobado"],
     ];
+    // Mapear cada registro a objeto con propiedades definidas
     return base.map(b => ({
       id: b[0], nombre: b[1], nivel: b[2], categoria: b[3], tipo: b[4],
       fechaSolicitud: b[5], inicio: b[6], fin: b[7], fechaAccion: b[8], aprobadoPor: b[9], estado: b[10],
     }));
   }
 
-  /* ---------- API opcional ---------- */
-  async function apiGet()   { if (!state.apiUrl) return null; const r = await fetch(state.apiUrl); if (!r.ok) throw new Error("GET "+r.status); return r.json(); }
-  async function apiPost(o) { if (!state.apiUrl) return null; const r = await fetch(state.apiUrl,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(o)}); try{return await r.json();}catch{return null;} }
+  /* ---------- Funciones API opcional ---------- */
+  async function apiGet()   { 
+    if (!state.apiUrl) return null;
+    const r = await fetch(state.apiUrl);
+    if (!r.ok) throw new Error("GET "+r.status);
+    return r.json();
+  }
+  async function apiPost(o) { 
+    if (!state.apiUrl) return null;
+    const r = await fetch(state.apiUrl,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(o)
+    });
+    try { return await r.json(); } catch { return null; } 
+  }
   async function apiPatch(id, patch){
     if (!state.apiUrl) return null;
     const url = state.apiUrl.replace(/\/$/,"") + "/" + encodeURIComponent(id);
-    const r = await fetch(url,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(patch)});
-    try{return await r.json();}catch{return null;}
+    const r = await fetch(url,{
+      method:"PATCH",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(patch)
+    });
+    try { return await r.json(); } catch { return null; }
   }
 
-  /* ---------- Layout ---------- */
+  /* ---------- Renderizado layout ---------- */
+  // Render del shell completo con filtros, tabla y paginación
   function renderShell(container, tableHtml, paginationHtml) {
     container.innerHTML = `
       <div class="page-title"><i class='bx bx-task'></i> <span>Solicitudes</span></div>
@@ -85,12 +114,14 @@
       ${paginationHtml}
     `;
 
-    // Filtro rápido por estado (demo)
+    // Filtro rápido por estado
     container.querySelector("#f-estado")?.addEventListener("change", (e) => {
-      state.page = 1; draw({ estado: e.target.value });
+      state.page = 1;
+      draw({ estado: e.target.value });
     });
   }
 
+  // Generar tabla con las filas visibles para la página actual
   function tableHTML(pageRows) {
     return `
       <table>
@@ -130,6 +161,7 @@
     `;
   }
 
+  // Generar controles de paginación y selector de cantidad por página
   function paginationHTML(total, page, limit) {
     const totalPages = Math.max(1, Math.ceil(total / limit));
     return `
@@ -149,11 +181,13 @@
     `;
   }
 
+  // Obtener las filas correspondientes a la página actual
   function slicePage(rows, page, limit) {
     const start = (page - 1) * limit;
     return rows.slice(start, start + limit);
   }
 
+  // Adjuntar eventos a botones de paginación y selector límite
   function attachPaginationHandlers() {
     const total = getFilteredRows().length;
     const totalPages = Math.max(1, Math.ceil(total / state.limit));
@@ -167,7 +201,7 @@
     });
   }
 
-  /* ---------- Modal Agregar (suave) ---------- */
+  /* ---------- Modal para agregar solicitud ---------- */
   function openModal(onSave) {
     const overlay = document.createElement("div");
     overlay.className = "modal-overlay";
@@ -232,10 +266,13 @@
     `;
     document.body.appendChild(overlay);
 
+    // Eventos para cerrar modal
     overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
     overlay.querySelector("#m-cancel").addEventListener("click", close);
     overlay.querySelector("#m-close").addEventListener("click", close);
+    // Abrir selector archivo al hacer click en chip
     overlay.querySelector(".file-chip").addEventListener("click", () => overlay.querySelector("#m-file").click());
+    // Guardar nuevo registro
     overlay.querySelector("#m-save").addEventListener("click", async () => {
       const nombre = val("#m-nombre"), nivel = val("#m-nivel");
       const categoria = val("#m-categoria"), tipo = val("#m-tipo");
@@ -249,15 +286,21 @@
     function close(){ overlay.remove(); }
   }
 
-  /* ---------- Acciones ---------- */
-  function acceptRow(id) { updateRow(id, { estado: "Aprobado", aprobadoPor: "Admin", fechaAccion: `${nowDate()} ${nowTime()}` }); }
-  function rejectRow(id) { updateRow(id, { estado: "No aprobado", aprobadoPor: "Admin", fechaAccion: `${nowDate()} ${nowTime()}` }); }
+  /* ---------- Acciones aprobar/rechazar ---------- */
+  function acceptRow(id) {
+    updateRow(id, { estado: "Aprobado", aprobadoPor: "Admin", fechaAccion: `${nowDate()} ${nowTime()}` });
+  }
+  function rejectRow(id) {
+    updateRow(id, { estado: "No aprobado", aprobadoPor: "Admin", fechaAccion: `${nowDate()} ${nowTime()}` });
+  }
   async function updateRow(id, changes) {
     const idx = state.rows.findIndex(r => r.id == id);
     if (idx === -1) return;
-    state.rows[idx] = { ...state.rows[idx], ...changes }; // optimista
+    // Actualización optimista local
+    state.rows[idx] = { ...state.rows[idx], ...changes };
     saveLS(state.rows);
     draw();
+    // Actualizar en API (intento silencioso)
     try { await apiPatch(id, changes); } catch {}
   }
 
@@ -268,7 +311,7 @@
     return state.rows.filter(r => r.estado === lastFilter.estado);
   }
 
-  /* ---------- Render ---------- */
+  /* ---------- Renderizar vista completa ---------- */
   function draw(filterOverride) {
     if (filterOverride) lastFilter = { ...lastFilter, ...filterOverride };
 
@@ -281,7 +324,7 @@
 
     attachPaginationHandlers();
 
-    // Acciones por fila (icon-only)
+    // Agregar evento a botones de aceptar/rechazar
     state.container.querySelectorAll(".btn-icon.accept").forEach(btn => {
       btn.addEventListener("click", (e) => {
         const id = e.currentTarget.closest("tr")?.dataset.id;
@@ -295,10 +338,10 @@
       });
     });
 
-    // Agregar
+    // Botón agregar solicitud abre modal
     state.container.querySelector("#btn-add")?.addEventListener("click", () => {
       openModal(async (payload) => {
-        const id = String(Math.floor(100000 + Math.random()*899999));
+        const id = String(Math.floor(100000 + Math.random()*899999)); // ID random
         const nuevo = {
           id,
           nombre: payload.nombre,
@@ -313,25 +356,34 @@
           estado: "Pendiente",
         };
 
-        state.rows.unshift(nuevo);   // optimista
+        // Agregar localmente
+        state.rows.unshift(nuevo);
         saveLS(state.rows);
         state.page = 1;
         draw();
 
+        // Intentar enviar a API
         try { await apiPost(nuevo); } catch {}
       });
     });
   }
 
+  // Cargar datos de API o localStorage o seed demo
   async function loadData() {
     if (state.apiUrl) {
-      try { const data = await apiGet(); if (Array.isArray(data) && data.length) return data; } catch {}
+      try { 
+        const data = await apiGet();
+        if (Array.isArray(data) && data.length) return data;
+      } catch {}
     }
     const ls = loadLS();
     if (ls.length) return ls;
-    const seeded = seedRows(); saveLS(seeded); return seeded;
+    const seeded = seedRows();
+    saveLS(seeded);
+    return seeded;
   }
 
+  // Método público para renderizar en un contenedor dado
   async function render(container, opts = {}) {
     state.container = container;
     state.limit = typeof opts.limit === "number" && opts.limit > 0 ? opts.limit : state.limit;

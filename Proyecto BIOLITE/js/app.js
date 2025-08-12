@@ -1,4 +1,7 @@
+// app.js
+
 /* ===== Refs ===== */
+// Referencias a elementos del DOM que se usan en toda la app
 const sidebar = document.getElementById("sidebar");
 const floatingToggle = document.getElementById("floatingToggle");
 const submenuLinks = document.querySelectorAll(".submenu a");
@@ -6,33 +9,39 @@ const mainSection = document.querySelector(".main-section");
 const btnHome = document.getElementById("btn-home");
 
 /* ===== Endpoints ===== */
+// Endpoints externos simulados para obtener datos (pueden ser reemplazados por APIs reales)
 const ENDPOINTS = {
   Empleado: "https://dummy.restapiexample.com/api/v1/employees",
   Usuarios: "https://jsonplaceholder.typicode.com/users",
-  // Renuncia no está en ENDPOINTS porque la manejamos con import dinámico
+  // Renuncia no está aquí porque se carga con import dinámico
 };
 
 /* ===== Traducciones de encabezados ===== */
+// Diccionario para traducir las claves de las tablas a un formato más legible
 const traducciones = {
   Usuarios: { id: "ID", name: "Nombre", username: "Usuario", email: "Correo" },
   Empleado: { id: "ID", employee_name: "Nombre", employee_salary: "Salario", employee_age: "Edad" },
   Configuración: { key: "Clave", value: "Valor" },
   Departamento: { id: "ID", nombre: "Nombre", descripcion: "Descripción" },
-  // Agrega otras traducciones si las usas
+  // Se pueden agregar más traducciones aquí
 };
 
 /* ===== Paginación simple ===== */
+// Configuración de la paginación por cada tabla
 const PAGINATION = {
   Usuarios: { mode: "client" },
   Empleado: { mode: "client" },
 };
 
 /* ===== Cargadores perezosos ===== */
+// Funciones que cargan scripts externos solo cuando son necesarios (lazy loading)
+
 let _paginacionReady = false;
 function ensurePaginacion() {
   return new Promise((resolve, reject) => {
     if (window.Paginacion) {
       if (!_paginacionReady) {
+        // Inicializa el módulo de paginación
         window.Paginacion.init({
           ENDPOINTS,
           PAGINATION,
@@ -44,6 +53,7 @@ function ensurePaginacion() {
       }
       return resolve();
     }
+    // Carga el script paginacion.js dinámicamente
     const s = document.createElement("script");
     s.src = "./js/paginacion.js";
     s.async = true;
@@ -63,6 +73,7 @@ function ensurePaginacion() {
   });
 }
 
+// Cargador perezoso para el módulo de asistencia
 let _asistenciaReady = false;
 function ensureAsistencia() {
   return new Promise((resolve, reject) => {
@@ -76,6 +87,7 @@ function ensureAsistencia() {
   });
 }
 
+// Cargador perezoso para solicitudes
 function ensureSolicitudes() {
   return new Promise((resolve, reject) => {
     if (window.Solicitudes) return resolve();
@@ -151,7 +163,6 @@ function ensureCargo() {
 }
 
 // Cargador perezoso para turnos
-
 let _turnoReady = false;
 function ensureTurno() {
   return new Promise((resolve, reject) => {
@@ -169,7 +180,6 @@ function ensureTurno() {
 }
 
 // Cargador perezoso para turnoGestion
-
 let _turnoGestionReady = false;
 function ensureTurnoGestion() {
   return new Promise((resolve, reject) => {
@@ -186,11 +196,8 @@ function ensureTurnoGestion() {
   });
 }
 
-
-
-      
-
 /* ===== Sidebar / Submenús ===== */
+// Maneja la apertura y cierre del sidebar y los submenús
 floatingToggle.addEventListener("click", () => {
   sidebar.classList.toggle("collapsed");
   if (sidebar.classList.contains("collapsed")) {
@@ -208,6 +215,7 @@ document.querySelectorAll(".menu-toggle").forEach(btn => {
 });
 
 /* ===== UI helpers ===== */
+// Funciones para mostrar mensajes de carga, error o falta de vinculación de datos
 const showLoading = () => {
   mainSection.innerHTML = `<h2>Cargando...</h2><p>Consultando la base de datos.</p>`;
 };
@@ -223,6 +231,7 @@ const showError = (nombreTabla, err) => {
 };
 
 /* ===== Renderizar tabla simple ===== */
+// Renderiza una tabla en pantalla con paginación
 function renderizarTabla(nombreTabla, items, total, page, limit) {
   if (!items || items.length === 0) {
     mainSection.innerHTML = `<h2>No hay datos para "${nombreTabla}"</h2>`;
@@ -263,15 +272,16 @@ function renderizarTabla(nombreTabla, items, total, page, limit) {
 }
 
 /* ===== Navegación de submenús ===== */
+// Define el comportamiento al hacer clic en los enlaces del submenú
 submenuLinks.forEach(link => {
   link.addEventListener("click", async (e) => {
     e.preventDefault();
     const nombreTabla = link.dataset.view || link.textContent.trim();
 
-
+    // Carga y renderizado de cada módulo según la opción elegida
     if (nombreTabla === "Reporte de Marcaciones") {
       try {
-        await ensureTurno(); // Cargamos turnos antes
+        await ensureTurno();
         await ensureAsistencia();
         return window.Asistencia.render(mainSection);
       } catch (err) {
@@ -349,20 +359,17 @@ submenuLinks.forEach(link => {
       }
     }
 
-
-
-
-
-
+    // Si no hay endpoint configurado para esta tabla
     if (!ENDPOINTS[nombreTabla]) return showNotLinked(nombreTabla);
 
+    // Carga la vista paginada
     await ensurePaginacion();
     window.Paginacion.loadView(nombreTabla, { page: 1, limit: 10 });
   });
 });
 
-
 /* ===== Home (gráficas) ===== */
+// Renderiza la vista principal con gráficas
 btnHome.addEventListener("click", () => {
   if (!sidebar.classList.contains("collapsed")) sidebar.classList.add("collapsed");
   renderVistaPrincipal();
@@ -378,6 +385,8 @@ function renderVistaPrincipal() {
   dibujarGraficaBarras();
   dibujarGraficaPastel();
 }
+
+// Dibuja gráfico de barras
 function dibujarGraficaBarras() {
   const ctx = document.getElementById("graficaBarras").getContext("2d");
   new Chart(ctx, {
@@ -394,6 +403,8 @@ function dibujarGraficaBarras() {
     options: { responsive: false, scales: { y: { beginAtZero: true } } }
   });
 }
+
+// Dibuja gráfico de pastel
 function dibujarGraficaPastel() {
   const ctx = document.getElementById("graficaPastel").getContext("2d");
   new Chart(ctx, {
